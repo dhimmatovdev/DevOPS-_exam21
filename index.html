@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps Test — Linux & Docker</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --card: #161e2e;
+    --border: #1e2d45;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --success: #10b981;
+    --error: #ef4444;
+    --warn: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    padding: 3rem 0 2.5rem;
+  }
+  .header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.08em;
+  }
+  .header h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, #e2e8f0 0%, var(--accent) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 1rem;
+    font-family: var(--mono);
+  }
+
+  /* ── START SCREEN ── */
+  #start-screen {
+    animation: fadeIn 0.5s ease;
+  }
+  .start-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-top: 1.5rem;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+  }
+  .stat-item {
+    background: rgba(0,229,255,0.05);
+    border: 1px solid rgba(0,229,255,0.12);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+  }
+  .stat-item .num {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: var(--mono);
+    line-height: 1;
+  }
+  .stat-item .lbl {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+  .rules {
+    list-style: none;
+    margin-bottom: 2rem;
+  }
+  .rules li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.9rem;
+    color: #94a3b8;
+  }
+  .rules li:last-child { border-bottom: none; }
+  .rules li span.icon { color: var(--accent); font-size: 1rem; }
+
+  .btn-start {
+    width: 100%;
+    padding: 1.1rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,229,255,0.25);
+  }
+  .btn-start:active { transform: translateY(0); }
+
+  /* ── QUIZ SCREEN ── */
+  #quiz-screen { display: none; animation: fadeIn 0.4s ease; }
+
+  .quiz-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .q-counter {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .q-counter strong { color: var(--accent); }
+
+  .score-display {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .score-display .sv { color: var(--success); font-weight: 700; }
+  .score-display .sw { color: var(--error); font-weight: 700; }
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--border);
+    border-radius: 999px;
+    height: 6px;
+    margin-bottom: 1.75rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+
+  /* Question card */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem 2.25rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0.6;
+  }
+  .q-num {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.85rem;
+    opacity: 0.8;
+  }
+  .q-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .q-hint {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+    opacity: 0.7;
+  }
+
+  /* Options */
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+  }
+  .option-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 0.9rem 1.2rem;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    color: var(--text);
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+    line-height: 1.5;
+    width: 100%;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: rgba(0,229,255,0.4);
+    background: rgba(0,229,255,0.05);
+    transform: translateX(3px);
+  }
+  .option-btn .opt-letter {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .option-btn.correct {
+    border-color: var(--success);
+    background: rgba(16,185,129,0.08);
+  }
+  .option-btn.correct .opt-letter {
+    background: var(--success);
+    color: #fff;
+    border-color: var(--success);
+  }
+  .option-btn.wrong {
+    border-color: var(--error);
+    background: rgba(239,68,68,0.07);
+  }
+  .option-btn.wrong .opt-letter {
+    background: var(--error);
+    color: #fff;
+    border-color: var(--error);
+  }
+  .option-btn.reveal {
+    border-color: rgba(16,185,129,0.4);
+    opacity: 0.65;
+  }
+  .option-btn:disabled { cursor: default; }
+
+  /* Multi-select note */
+  .multi-note {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--warn);
+    margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+
+  /* Action buttons */
+  .action-row {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+  .btn {
+    padding: 0.75rem 1.75rem;
+    border-radius: 10px;
+    border: none;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .btn:disabled { opacity: 0.35; cursor: default; }
+  .btn-check {
+    background: linear-gradient(135deg, var(--accent), #0097a7);
+    color: #000;
+  }
+  .btn-next {
+    background: linear-gradient(135deg, var(--accent2), #a855f7);
+    color: #fff;
+    display: none;
+  }
+  .btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,229,255,0.2);
+  }
+
+  /* Feedback toast */
+  .feedback-bar {
+    padding: 0.9rem 1.2rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: none;
+    animation: slideDown 0.3s ease;
+  }
+  .feedback-bar.ok { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
+  .feedback-bar.fail { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: var(--error); }
+
+  /* ── RESULT SCREEN ── */
+  #result-screen { display: none; animation: fadeIn 0.5s ease; }
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 3rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,229,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .result-emoji { font-size: 4rem; margin-bottom: 1rem; }
+  .result-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--text), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .result-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 2.5rem; }
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .rs-item {
+    padding: 1.25rem;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+  }
+  .rs-item .rs-val {
+    font-size: 1.9rem;
+    font-weight: 800;
+    font-family: var(--mono);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+  .rs-item .rs-lbl { font-size: 0.75rem; color: var(--muted); }
+  .rs-correct .rs-val { color: var(--success); }
+  .rs-wrong .rs-val { color: var(--error); }
+  .rs-pct .rs-val { color: var(--accent); }
+
+  /* Grade bar */
+  .grade-wrap { margin-bottom: 2rem; }
+  .grade-label {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+  .grade-bar-outer {
+    height: 14px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .grade-bar-inner {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--success), var(--accent));
+    transition: width 1s ease;
+  }
+
+  .grade-badge {
+    display: inline-block;
+    padding: 0.6rem 2rem;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+  .grade-5 { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+  .grade-4 { background: rgba(0,229,255,0.1); color: var(--accent); border: 1px solid rgba(0,229,255,0.25); }
+  .grade-3 { background: rgba(245,158,11,0.1); color: var(--warn); border: 1px solid rgba(245,158,11,0.25); }
+  .grade-2 { background: rgba(239,68,68,0.1); color: var(--error); border: 1px solid rgba(239,68,68,0.25); }
+
+  .btn-restart {
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-restart:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,255,0.25); }
+
+  /* Review section */
+  .review-section { margin-top: 2.5rem; }
+  .review-section h3 {
+    font-size: 1rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-bottom: 1.25rem;
+    text-align: left;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    text-align: left;
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  .review-item.r-ok { border-left: 3px solid var(--success); }
+  .review-item.r-fail { border-left: 3px solid var(--error); }
+  .review-item .r-q { color: var(--text); font-weight: 600; margin-bottom: 0.4rem; }
+  .review-item .r-a { color: var(--muted); font-family: var(--mono); font-size: 0.78rem; }
+  .review-item .r-a span { color: var(--success); }
+  .review-item .r-a .r-yours { color: var(--error); }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .stats-grid, .result-stats { grid-template-columns: 1fr 1fr; }
+    .result-stats .rs-pct { grid-column: span 2; }
+    .question-card { padding: 1.5rem 1.25rem; }
+    .action-row { flex-direction: column; }
+    .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">⚡ DEVOPS · LINUX · DOCKER · CI/CD</div>
+    <h1>DevOps Bilim Testi</h1>
+    <p>// linux · docker · gitlab-ci · networking · bash</p>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="start-screen">
+    <div class="start-card">
+      <div class="stats-grid">
+        <div class="stat-item"><div class="num">136</div><div class="lbl">Jami savollar</div></div>
+        <div class="stat-item"><div class="num">30</div><div class="lbl">Har o'yinda</div></div>
+      </div>
+      <ul class="rules">
+        <li><span class="icon">🎯</span> Har safar 136 ta savoldan 30 tasi tasodifiy tanlanadi</li>
+        <li><span class="icon">⏱</span> Har savol uchun 30 soniya vaqt beriladi</li>
+        <li><span class="icon">✅</span> Ba'zi savollarda bir nechta to'g'ri javob bo'lishi mumkin</li>
+        <li><span class="icon">📊</span> Oxirida natija va xatolar ko'rsatiladi</li>
+        <li><span class="icon">🔄</span> Testni xohlagan marta qayta o'ynashingiz mumkin</li>
+      </ul>
+      <button class="btn-start" onclick="startQuiz()">▶ Testni Boshlash</button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen">
+    <div class="quiz-topbar">
+      <div class="q-counter">Savol <strong id="q-current">1</strong> / <strong>30</strong></div>
+      <div class="score-display">
+        ✓ <span class="sv" id="score-correct">0</span> &nbsp; ✗ <span class="sw" id="score-wrong">0</span>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num" id="q-num-label">SAVOL 01</div>
+      <div class="q-text" id="q-text"></div>
+      <div class="q-hint" id="q-hint"></div>
+    </div>
+
+    <div id="multi-note" class="multi-note" style="display:none">⚠ Bir nechta to'g'ri javob bor — hammasini belgilang</div>
+
+    <div class="options-list" id="options-list"></div>
+
+    <div class="feedback-bar" id="feedback-bar"></div>
+
+    <div class="action-row">
+      <button class="btn btn-check" id="btn-check" onclick="checkAnswer()">Tekshirish</button>
+      <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">Keyingi →</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="result-screen">
+    <div class="result-card">
+      <div class="result-emoji" id="result-emoji">🎉</div>
+      <div class="result-title" id="result-title">Ajoyib!</div>
+      <div class="result-sub" id="result-sub">30 ta savoldan natijangiz:</div>
+      <div class="result-stats">
+        <div class="rs-item rs-correct"><div class="rs-val" id="r-correct">0</div><div class="rs-lbl">To'g'ri</div></div>
+        <div class="rs-item rs-wrong"><div class="rs-val" id="r-wrong">0</div><div class="rs-lbl">Noto'g'ri</div></div>
+        <div class="rs-item rs-pct"><div class="rs-val" id="r-pct">0%</div><div class="rs-lbl">Natija</div></div>
+      </div>
+      <div class="grade-wrap">
+        <div class="grade-label"><span>0%</span><span>100%</span></div>
+        <div class="grade-bar-outer"><div class="grade-bar-inner" id="grade-bar" style="width:0%"></div></div>
+      </div>
+      <div class="grade-badge" id="grade-badge">—</div>
+      <br>
+      <button class="btn-restart" onclick="restartQuiz()">🔄 Qayta O'ynash</button>
+      <div class="review-section">
+        <h3>// xatolar ko'rgazmasi</h3>
+        <div id="review-list"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {
+    q: "LTS nima degan ma'noni anglatadi?",
+    opts: ["Long Time Support","Long Time Service","Long Term Support","Linux Term Service"],
+    ans: [2],
+    hint: "Ubuntu versiyalariga oid atama"
+  },
+  {
+    q: "Qaysi Ubuntu versiyalari LTS hisoblanadi?",
+    opts: ["Juft raqamli versiyalar","Toq raqamli versiyalar"],
+    ans: [0],
+    hint: "Masalan: 20.04, 22.04, 24.04"
+  },
+  {
+    q: "Ubuntu ning standart qo'llab-quvvatlash muddati qancha?",
+    opts: ["1 yil","9 oy","5-10 yil","3 yil"],
+    ans: [1, 2],
+    hint: "LTS va oddiy versiyalar uchun farq bor"
+  },
+  {
+    q: "root nima?",
+    opts: [
+      "UNIX tizimlarida cheksiz huquqlarga ega bo'lgan suprafoydalanuvchi",
+      "Faqat fayllarni o'qiy oladigan foydalanuvchi",
+      "Tizim tomonidan yaratilgan xizmat hisobini",
+      "Oddiy foydalanuvchi"
+    ],
+    ans: [0],
+    hint: "UNIX-ga o'xshash tizimlar"
+  },
+  {
+    q: "Operatsion tizimni o'rnatishda suprafoydalanuvchi qanday yaratiladi?",
+    opts: [
+      "Hech qanday, tizimda allaqachon mavjud",
+      "Maxsus buyruq bilan",
+      "O'rnatish jarayonida qo'lda yaratiladi",
+      "useradd root buyrug'i bilan"
+    ],
+    ans: [0],
+    hint: "root tizimda standart ravishda mavjud"
+  },
+  {
+    q: "Tizim foydalanuvchilari (system users) nima?",
+    opts: [
+      "Tizim jarayonlarini boshqarish uchun tizim tomonidan yaratilgan hisoblar",
+      "Oddiy foydalanuvchi hisoblari",
+      "Root huquqlariga ega foydalanuvchilar",
+      "Vaqtincha foydalanuvchilar"
+    ],
+    ans: [0],
+    hint: "Ular login qila olmaydi"
+  },
+  {
+    q: "Oddiy foydalanuvchilar nima?",
+    opts: [
+      "Xizmat jarayonlariga murojaat qila oladigan, fayl huquqlarini o'zgartira oladigan, lekin xizmat ilovalarini o'chira olmaydigan hisoblar",
+      "Hamma narsaga ruxsati bo'lgan foydalanuvchilar",
+      "Faqat o'z fayllarini o'qiy oladigan foydalanuvchilar",
+      "Tizim tomonidan yaratilgan hisoblar"
+    ],
+    ans: [0],
+    hint: "sudo olmasa chekli huquq"
+  },
+  {
+    q: "head va tail buyruqlari orasidagi farq nima?",
+    opts: [
+      "tail oxiridan o'qiydi, head boshidan o'qiydi",
+      "head oxiridan o'qiydi, tail boshidan o'qiydi",
+      "Ikkalasi ham boshidan o'qiydi",
+      "Ikkalasi ham oxiridan o'qiydi"
+    ],
+    ans: [0],
+    hint: "head=bosh, tail=dum"
+  },
+  {
+    q: "tail va cat buyruqlari orasidagi farq nima?",
+    opts: [
+      "tail faylning oxirgi n ta satrini chiqaradi, cat esa butun faylni",
+      "cat faylning oxirgi n ta satrini chiqaradi",
+      "tail butun faylni chiqaradi",
+      "Hech qanday farq yo'q"
+    ],
+    ans: [0],
+    hint: "cat=to'liq, tail=oxirgi qism"
+  },
+  {
+    q: "Ko'p sahifali faylni qulay ko'rish uchun qaysi buyruq ishlatiladi?",
+    opts: ["cat","head","less","tail"],
+    ans: [2],
+    hint: "Oldinga ham, orqaga ham o'tish mumkin"
+  },
+  {
+    q: "Qaysi buyruq uy direktoriyasiga o'tmaydi?",
+    opts: ["cd $HOME","cd /","cd","cd ~"],
+    ans: [1],
+    hint: "/ — bu ildiz (root) direktoriyasi"
+  },
+  {
+    q: "Bash-da $ belgisi nima uchun ishlatiladi?",
+    opts: [
+      "O'zgaruvchilarning qiymatiga murojaat qilish uchun",
+      "Avvalgi buyruq argumentini saqlaydi",
+      "Satr oxirini bildiradi",
+      "Munosabat operatori"
+    ],
+    ans: [0],
+    hint: "Masalan: $HOME, $USER"
+  },
+  {
+    q: "Bajariladigan buyruqning statusi nima?",
+    opts: [
+      "Muvaffaqiyatli bajarilgan dastur",
+      "Dastur bajarilishining natijasi",
+      "Buyruqning qaytish kodi (exit code)"
+    ],
+    ans: [2],
+    hint: "exit code deb ham ataladi"
+  },
+  {
+    q: "Bash-da 0 qaytish kodi nimani anglatadi?",
+    opts: [
+      "Buyruq topilmadi",
+      "Argument noto'g'ri ko'rsatilgan",
+      "Buyruq bajarilishida xato yuz berdi",
+      "Buyruq muvaffaqiyatli bajarildi"
+    ],
+    ans: [3],
+    hint: "0 = muvaffaqiyat"
+  },
+  {
+    q: "Bash-da 1 qaytish kodi nimani anglatadi?",
+    opts: [
+      "Buyruq topilmadi",
+      "Argument noto'g'ri ko'rsatilgan",
+      "Buyruq bajarilishida xato yuz berdi",
+      "Buyruq muvaffaqiyatli bajarildi"
+    ],
+    ans: [2],
+    hint: "1 = umumiy xato"
+  },
+  {
+    q: "Bash-da true qaysi raqam bilan ifodalanadi?",
+    opts: ["1","0"],
+    ans: [1],
+    hint: "Linux-da 0 = muvaffaqiyat = true"
+  },
+  {
+    q: "Docker nima?",
+    opts: [
+      "Konteynerlardan foydalanib ilovalarni yaratish, joylashtirish va ishga tushirishni osonlashtiradigan vosita",
+      "Virtual mashina yaratish uchun dastur",
+      "Bulut xizmat ko'rsatuvchi platforma",
+      "Tarmoq monitoring vositasi"
+    ],
+    ans: [0],
+    hint: "Konteynerizatsiya vositasi"
+  },
+  {
+    q: "Docker virtual mashinadan qanday farq qiladi?",
+    opts: [
+      "Docker o'z yadrosi yo'q, virtual mashina esa o'z shaxsiy yadrosiga ega",
+      "Virtual mashina apparat jarayonlarini virtualizatsiya qiladi, konteynerlar esa faqat operatsion tizimni",
+      "Docker alohida operatsion tizimga ega",
+      "Hech qanday farq yo'q"
+    ],
+    ans: [0, 1],
+    hint: "Ikkita to'g'ri javob bor"
+  },
+  {
+    q: "Docker versiyasini qanday ko'rish mumkin?",
+    opts: ["docker version","docker ls","docker info","docker status"],
+    ans: [0, 2],
+    hint: "Ikkita buyruq ham ishlaydi"
+  },
+  {
+    q: "Konteyner nima?",
+    opts: [
+      "Ishga tushirilgan Docker obrazi. Faqat zaruriy narsa va ilova kodini o'z ichiga olgan mustaqil OT",
+      "To'liq mustaqil operatsion tizimdan iborat obraz",
+      "Barcha kerakli narsani o'z ichiga olgan dasturiy paket",
+      "Barcha kerakli narsani o'z ichiga olgan dasturiy ta'minot"
+    ],
+    ans: [0],
+    hint: "Obraz ishga tushganda konteyner bo'ladi"
+  },
+  {
+    q: "Obraz (image) nima?",
+    opts: [
+      "Ishga tushirish uchun zarur hamma narsani o'z ichiga olgan maxsus bajariladigan fayl",
+      "Faqat konteynerning tavsifini o'z ichiga olgan maxsus bajariladigan fayl",
+      "Dasturiy ta'minotning bajariladigan avtonom paketi, ishga tushirish uchun kerak bo'lgan hamma narsa bilan",
+      "Ishga tushirish uchun kerak bo'lgan hamma narsani o'z ichiga olgan dasturiy ta'minot"
+    ],
+    ans: [2],
+    hint: "Konteyner uchun shablon"
+  },
+  {
+    q: "DockerHub nima?",
+    opts: [
+      "Turli dasturiy ta'minot bilan obrazlarni saqlash ombori",
+      "Docker-ning rasmiy veb-sayti",
+      "Docker konfiguratsiya fayli",
+      "Konteyner monitoring vositasi"
+    ],
+    ans: [0],
+    hint: "Obraz ombori (registry)"
+  },
+  {
+    q: "Dockerfile nima?",
+    opts: [
+      "Obraz yig'ish uchun ko'rsatmalar o'z ichiga olgan fayl",
+      "Docker-ni boshqarish uchun konfiguratsiya fayli",
+      "Konteyner ro'yxati fayli",
+      "Docker loglari fayli"
+    ],
+    ans: [0],
+    hint: "Build instruksiyalari"
+  },
+  {
+    q: "Docker registry nima?",
+    opts: [
+      "Obrazlarni saqlash va tarqatish xizmati",
+      "Docker konfiguratsiyasi",
+      "Konteyner monitoring tizimi",
+      "DockerHub bilan bir xil narsa"
+    ],
+    ans: [0],
+    hint: "DockerHub — docker registry-ning bir turi"
+  },
+  {
+    q: "Pipeline nima?",
+    opts: [
+      "Har biri bir nechta vazifalarni o'z ichiga olgan bosqichlarning ketma-ket bajarilishi",
+      "Parallel bajarish",
+      "Faqat CI vazifalari",
+      "Faqat CD vazifalari"
+    ],
+    ans: [0],
+    hint: "CI/CD jarayoni"
+  },
+  {
+    q: "GitLab-da pipeline qachon ishga tushadi?",
+    opts: [
+      "Masofaviy repositoriyada har qanday o'zgarish bo'lganda",
+      "Faqat tag yaratilganda",
+      "Faqat qo'lda ishga tushirilganda",
+      "Har kuni belgilangan vaqtda"
+    ],
+    ans: [0],
+    hint: "Push yoki merge request"
+  },
+  {
+    q: "CI bosqichlari qaysilar?",
+    opts: ["build, test","deploy, publish","staging, production","commit, push"],
+    ans: [0],
+    hint: "Continuous Integration"
+  },
+  {
+    q: "CD bosqichlari qaysilar?",
+    opts: [
+      "deploy staging, deploy production, publish, update configs",
+      "build, test",
+      "commit, push, merge",
+      "lint, format, review"
+    ],
+    ans: [0],
+    hint: "Continuous Delivery/Deployment"
+  },
+  {
+    q: "gitlab-runner nima? Bu xizmat...",
+    opts: [
+      "Belgilangan taymer bo'yicha .gitlab-ci.yml ko'rsatmalarini bajaradi",
+      "GitLab uchun agent funksiyasini bajaradi",
+      "Bash skriptini ishga tushiradi",
+      "Foydalanuvchini .gitlab-ci.yml ishga tushirishga xabardor qiladi"
+    ],
+    ans: [1],
+    hint: "Agent for GitLab"
+  },
+  {
+    q: "gitlab-ci-da fayllarni 10 kun saqlash uchun qaysi buyruq ishlatiladi?",
+    opts: ["expire_in: 10 days","save_for: 10d","artifacts_ttl: 10","keep: 10 days"],
+    ans: [0],
+    hint: "artifacts bo'limida ishlatiladi"
+  },
+  {
+    q: "CI/CD pipeline bosqichining muvaffaqiyatliligini qanday aniqlash mumkin?",
+    opts: [
+      "Hech qanday yo'q",
+      "script buyrug'idagi ko'rsatmalar qaytish kodlari bo'yicha",
+      "Script muhitidan xabarnoma orqali",
+      "GitLab-da qalqib chiquvchi xabarnoma orqali"
+    ],
+    ans: [1],
+    hint: "Exit code 0 = success"
+  },
+  {
+    q: "Kernel nima?",
+    opts: [
+      "Tizim ilovalaridan birining nomi",
+      "OT yadrosi",
+      "Ba'zi Linux distributivlarida grafik qobiq",
+      "Fayl tizimi bilan ishlash uchun OT qismi"
+    ],
+    ans: [1],
+    hint: "Operatsion tizimning asosi"
+  },
+  {
+    q: "'user is not in the sudoers file' xatosi nimani anglatadi?",
+    opts: [
+      "Foydalanuvchini sudoers fayliga qo'shishdagi xato",
+      "Ushbu foydalanuvchiga /etc/sudoers faylida sudo bajarish ruxsati berilmagan",
+      "Foydalanuvchini sudoers fayliga qo'shib bo'lmasligini ko'rsatadi",
+      "Foydalanuvchi sudo ishlatish huquqiga ega emas"
+    ],
+    ans: [1, 3],
+    hint: "Ikkita to'g'ri javob bor"
+  },
+  {
+    q: "Hamma uchun barcha huquqlar (o'qish, yozish, bajarish) qanday raqam bilan ifodalanadi?",
+    opts: ["777","755","666","644"],
+    ans: [0],
+    hint: "r=4, w=2, x=1"
+  },
+  {
+    q: "Egasi uchun barcha huquqlar, boshqalar uchun o'qish va bajarish qanday ifodalanadi?",
+    opts: ["777","755","666","644"],
+    ans: [1],
+    hint: "7=rwx, 5=r-x"
+  },
+  {
+    q: "Egasi, guruh va boshqalar uchun faqat o'qish va yozish qanday ifodalanadi?",
+    opts: ["777","755","666","644"],
+    ans: [2],
+    hint: "6=rw-"
+  },
+  {
+    q: "Katalog va uning mazmunida huquqlarni o'zgartirish uchun qaysi buyruq ishlatiladi?",
+    opts: ["chmod -R","chmod -all","chmod -r","chown -R"],
+    ans: [0],
+    hint: "Rekursiv o'zgartirish"
+  },
+  {
+    q: "vi matn muharriridan saqlashsiz chiqish uchun qaysi buyruq?",
+    opts: [":leave",":e",":q!",":exit"],
+    ans: [2],
+    hint: "! majburan chiqish degani"
+  },
+  {
+    q: "NTP protokoli nima uchun javobgar?",
+    opts: [
+      "Kompyuter vaqtini sinxronlashtirish uchun",
+      "Tarmoq paketlarini uzatish uchun",
+      "IP manzillarni tayinlash uchun",
+      "DNS so'rovlarini hal qilish uchun"
+    ],
+    ans: [0],
+    hint: "Network Time Protocol"
+  },
+  {
+    q: "ncdu va du orasidagi farq nima?",
+    opts: [
+      "ncdu grafik interfeysi (UI) bor",
+      "Hech qanday farq yo'q",
+      "ncdu faqat root orqali ishga tushiriladi"
+    ],
+    ans: [0],
+    hint: "ncdu = ncurses disk usage"
+  },
+  {
+    q: "Bash-da qaytish kodi manfiy bo'lishi mumkinmi?",
+    opts: ["Ha","Yo'q"],
+    ans: [1],
+    hint: "0-255 oralig'ida"
+  },
+  {
+    q: "#!/bin/bash va #!/bin/sh orasidagi farq nima?",
+    opts: [
+      "bash — sh-ning yanada funksional versiyasi, sh — POSIX-ga mos shell",
+      "sh bash-ning yanada funksional versiyasi",
+      "Ikkalasi ham bir xil",
+      "bash faqat Debian-da ishlaydi"
+    ],
+    ans: [0],
+    hint: "bash > sh funksionallik jihatidan"
+  },
+  {
+    q: "Bash-da faylning mavjudligini va u fayl ekanligini tekshirish uchun qaysi parametr?",
+    opts: ["-d","-s","-f","-t"],
+    ans: [2],
+    hint: "file = -f, directory = -d"
+  },
+  {
+    q: "read buyrug'idan keyin o'zgaruvchi ko'rsatilmasa, natija qayerga saqlanadi?",
+    opts: ["ANSWER","RESULT","QUESTION","REPLY"],
+    ans: [3],
+    hint: "Bash standart o'zgaruvchisi"
+  },
+  {
+    q: "Bir buyruqning stdout ni boshqasining stdin ga yo'naltirish uchun nima ishlatiladi?",
+    opts: ["cmd1 <> cmd2","cmd1 2 > cmd2","cmd1 < cmd2","cmd1 | cmd2"],
+    ans: [3],
+    hint: "Pipe operatori"
+  },
+  {
+    q: "5 ta oxirgi satrni fayl chiqarish uchun to'g'ri buyruq qaysi?",
+    opts: ["cat file --lines=5","head file lines=5","tail --lines=5 file","tail file --lines=5"],
+    ans: [2, 3],
+    hint: "Ikkita variant ham ishlashi mumkin"
+  },
+  {
+    q: "touch file1 | cp file1 /tmp/ buyrug'ida nima noto'g'ri?",
+    opts: [
+      "| belgisi noto'g'ri",
+      "cp buyrug'ida -r kaliti yo'q",
+      "touch da -c kaliti yo'q",
+      "Yo'ldagi / ortiqcha"
+    ],
+    ans: [0],
+    hint: "touch natijasi cp-ga stdin emas"
+  },
+  {
+    q: "Dockerfile konfiguratsiyasining formati qanday?",
+    opts: ["Matnli","YAML","JSON","Config"],
+    ans: [0],
+    hint: "Maxsus formatdagi oddiy matn fayli"
+  },
+  {
+    q: "docker inspect nima haqida ma'lumot ko'rsatadi?",
+    opts: [
+      "Konteyner",
+      "Bajarilgan jarayonlar",
+      "Ishlatiladigan resurslar",
+      "Docker tarmog'i"
+    ],
+    ans: [0, 3],
+    hint: "Ikkita to'g'ri javob bor"
+  },
+  {
+    q: "docker create va docker run orasidagi farq nima?",
+    opts: [
+      "docker create konteyner yaratadi, docker run esa yaratadi va ishga tushiradi",
+      "docker run faqat yaratadi",
+      "docker create ishga tushiradi",
+      "Hech qanday farq yo'q"
+    ],
+    ans: [0],
+    hint: "create = yaratish, run = yaratish + ishga tushirish"
+  },
+  {
+    q: "Konteynerda o'zgartirishdan so'ng yangi obraz yaratish uchun qaysi buyruq?",
+    opts: ["docker attach nginx","docker push nginx","docker image prune","docker commit nginx"],
+    ans: [3],
+    hint: "commit = o'zgarishlarni obraz sifatida saqlash"
+  },
+  {
+    q: "Konteyner ichiga kirish uchun qaysi buyruq ishlatiladi?",
+    opts: [
+      "docker exec -it test1 bash",
+      "docker enter test1",
+      "docker shell test1",
+      "docker attach test1"
+    ],
+    ans: [0],
+    hint: "-it = interactive terminal"
+  },
+  {
+    q: "Barcha konteynerlar ro'yxatini ko'rish buyrug'i?",
+    opts: ["docker ps","docker ps -a","docker ls -a","docker run"],
+    ans: [1],
+    hint: "-a = all (to'xtatilganlar ham)"
+  },
+  {
+    q: "Obrazlar ro'yxatini ko'rish buyrug'i?",
+    opts: ["docker images","docker ls","docker list","docker img"],
+    ans: [0, 1],
+    hint: "Ikkita buyruq ham ishlaydi"
+  },
+  {
+    q: "test1 konteynerining loglarini ko'rish buyrug'i?",
+    opts: ["docker test1logs","dockerlogs test1","docker status test1","docker logs test1"],
+    ans: [3],
+    hint: "docker logs <container_name>"
+  },
+  {
+    q: "gitlab-ci.yml da needs ni qanday to'g'ri yozish kerak?",
+    opts: [
+      'needs:\n - "bosqich nomi"',
+      'needs: ["bosqich nomi"]',
+      'needs: bosqich nomi',
+      'needs: {"bosqich nomi"}'
+    ],
+    ans: [1],
+    hint: "Massiv formatida"
+  },
+  {
+    q: "gitlab-ci-da $CI_JOB_STATUS o'zgaruvchisini qayerda ishlatish mumkin?",
+    opts: ["before_script","after_script","artifacts","script"],
+    ans: [1],
+    hint: "Ish tugagandan so'ng mavjud bo'ladi"
+  },
+  {
+    q: "gitlab-ci-da bosqich qo'lda ishga tushirilishini qanday ko'rsatish kerak?",
+    opts: [
+      "needs:\n- when: manual",
+      "build:\n- manual",
+      "rules:\n- manual",
+      "rules:\n- when: manual"
+    ],
+    ans: [3],
+    hint: "rules + when: manual"
+  },
+  {
+    q: "gitlab-ci.yml da bosqich uchun ishlatiladigan obrazni qanday ko'rsatish kerak?",
+    opts: [
+      "image: image_name",
+      "image - image_name",
+      "image(container_name)",
+      "container: container_name"
+    ],
+    ans: [0],
+    hint: "YAML sintaksisi"
+  },
+  {
+    q: "gitlab-runner executor turlari qaysilar?",
+    opts: ["docker","shell","gitlab-executor","ssh","VirtualBox"],
+    ans: [0, 1, 3, 4],
+    hint: "gitlab-executor mavjud emas"
+  },
+  {
+    q: "SSH nima uchun javobgar?",
+    opts: [
+      "Ma'lumot uzatish",
+      "Kompyuterni boshqarish",
+      "UDP yoki TCP ulanishi",
+      "TCP-tunneling"
+    ],
+    ans: [1, 3],
+    hint: "Ikkita to'g'ri javob bor"
+  },
+  {
+    q: "Combined log formatida {user-agent} maydoni nima ma'noni anglatadi?",
+    opts: ["Foydalanuvchi brauzeri","Foydalanuvchi OT si"],
+    ans: [0],
+    hint: "Qaysi brauzer ishlatilgani"
+  },
+  {
+    q: "Dockerfile yozishda faylni obraz ichiga nusxalash uchun qaysi buyruq?",
+    opts: ["FROM","WORKDIR","COPY","AND"],
+    ans: [2],
+    hint: "COPY source destination"
+  },
+  {
+    q: "Demonlar (daemon) nima?",
+    opts: [
+      "Daemon ismli foydalanuvchi yaratgan dasturlar",
+      "Barcha Linux jarayonlari va ilovalarining umumiy nomi",
+      "Ota jarayoni haqida ma'lumot ololmagan tugatilgan jarayon",
+      "Fon rejimida ishlaydigan xizmat dasturi yoki jarayon"
+    ],
+    ans: [3],
+    hint: "Background service"
+  },
+  {
+    q: "nginx nomli konteynerini o'chirish buyrug'i?",
+    opts: ["docker -d nginx","docker rm --name nginx","docker rmi nginx","docker rm nginx"],
+    ans: [3],
+    hint: "rm = remove container"
+  },
+  {
+    q: "HTTPS ning standart port raqami?",
+    opts: ["443","80","22","5000"],
+    ans: [0],
+    hint: "HTTP=80, HTTPS=443, SSH=22"
+  },
+  {
+    q: "Quyidagi skript nima chiqaradi?\n#!/bin/bash\nfunction myfunc {\nlocal temp=$[$value + 5]\necho \"$temp\"\n}\ntemp=4\nmyfunc\necho $((temp))",
+    opts: ["5\n$9","05\n4","xato","5\n4"],
+    ans: [3],
+    hint: "local o'zgaruvchi scope-ga e'tibor bering"
+  },
+  {
+    q: "Cron-da har oy bir marta /usr/bin/script.sh ni ishga tushirish uchun?",
+    opts: ["0 0 1 * *","* * */12 * *","* * */0 * *","* * 0 * *"],
+    ans: [0],
+    hint: "Har oyning birinchi kuni, yarim tunda"
+  },
+  {
+    q: "Bir tarmoq portidan bir vaqtning o'zida nechta xizmat foydalanishi mumkin?",
+    opts: [
+      "Bir nechta navbat bilan",
+      "3 tagacha ilova bir vaqtda",
+      "Bir port — bir ilova",
+      "Cheksiz miqdorda"
+    ],
+    ans: [2],
+    hint: "Port unique binding"
+  },
+  {
+    q: "Bash-da faylning bo'sh emasligini tekshirish uchun qaysi parametr?",
+    opts: ["-l","-f","-s","-d"],
+    ans: [2],
+    hint: "-s = size > 0"
+  },
+  {
+    q: "Ishga tushirilgan konteynerlar ro'yxatini ko'rish buyrug'i?",
+    opts: ["docker ps","docker ls -a","docker events","docker ps -a"],
+    ans: [0],
+    hint: "Faqat ishga tushirilganlar, to'xtatilganlar emas"
+  },
+  {
+    q: "Ikkinchi terminalni qanday ochish mumkin?",
+    opts: ["Alt+Ctrl+T","Alt+Ctrl+F2","Alt+T","Alt+F2"],
+    ans: [0],
+    hint: "Ubuntu standart qisqa yo'l"
+  },
+  {
+    q: "Joriy direktoriyaning barcha pastki direktoriyalarini ko'rsatadigan buyruq?",
+    opts: ["ls -R","ls","ps -R","ls -r"],
+    ans: [0],
+    hint: "-R = recursive"
+  },
+  {
+    q: "Linux-dagi standart matn muharriri qaysi?",
+    opts: ["vim","vi","mcedit","nano"],
+    ans: [1],
+    hint: "Eng qadimgi va standart"
+  },
+  {
+    q: "Qaysi variant izoh (comment) hisoblanadi?",
+    opts: [
+      "echo \"Bu #izohmi?\"",
+      "echo 'Bu #izohmi?'",
+      "echo Bu \\#izohmi?",
+      "echo Bu #izohmi?"
+    ],
+    ans: [3],
+    hint: "Qo'shtirnoqsiz # izoh boshlanadi"
+  },
+  {
+    q: "Ubuntu 20.04.3 LTS-da root foydalanuvchi sifatida ishlash mumkinmi?",
+    opts: [
+      "Ha, standart ravishda",
+      "O'rnatishda qo'shish kerak",
+      "LTS versiyalarida root sifatida ishlash mumkin emas",
+      "Ha, lekin standart emas — su yoki sudo orqali"
+    ],
+    ans: [3],
+    hint: "sudo su yoki sudo -i"
+  },
+  {
+    q: "Faylga kirish huquqlarini o'zgartirish buyrug'i?",
+    opts: ["chown","mode","chmod","chfile"],
+    ans: [2],
+    hint: "chmod = change mode"
+  },
+  {
+    q: "if [ 4 -gt 5 ]; then echo \"0\"; else echo \"1\"; fi — nima chiqadi?",
+    opts: ["command not found","4 -gt 5","0","1"],
+    ans: [3],
+    hint: "4 > 5 shartini tekshiring"
+  },
+  {
+    q: "Dockerfile-da RUN chaqiruvlarini minimal saqlash nima uchun kerak?",
+    opts: [
+      "Obraz hajmini kattalashtirmaslik uchun, chunki har bir RUN qatlam yaratadi",
+      "Konteyner ishga tushirish vaqtini kamaytirish uchun",
+      "Har bir RUN uchun alohida dockerfile kerak",
+      "Har bir konteynerda RUN soni cheklangan"
+    ],
+    ans: [0],
+    hint: "Har bir RUN = yangi layer"
+  },
+  {
+    q: "Obrazdagi qatlamlarning (layers) ahamiyati nima?",
+    opts: [
+      "Har bir qatlam qandaydir ilovaning qanday ishga tushirish va ishlashini tavsiflaydi",
+      "Yangi qatlam — avvalgi qatlamlar bilan bog'liq bo'lmagan yangi ma'lumotlar",
+      "Har bir qatlam ishga tushirilgan konteyner ma'lumotlari bilan bajariladigan o'zgartirishni tavsiflaydi",
+      "Konteynerda har bir ilova qatlamga o'rnatiladi"
+    ],
+    ans: [2],
+    hint: "Layered filesystem"
+  },
+  {
+    q: "Combined Log Formatda \"%{Referer}i\" nima uchun javobgar?",
+    opts: [
+      "Foydalanuvchining IP-manzili",
+      "Foydalanuvchi o'tib kelgan URL",
+      "Foydalanuvchining provayderi",
+      "Foydalanuvchining brauzeri"
+    ],
+    ans: [1],
+    hint: "Referrer = qaerdan keldi"
+  },
+  {
+    q: "Tizimda barcha foydalanuvchilarni sanash uchun qaysi ifoda?",
+    opts: [
+      "cat /etc/passwd | wc -l",
+      "cat /etc/passwd wc -l",
+      "ls /etc/passwd wc -l"
+    ],
+    ans: [0],
+    hint: "| pipe kerak"
+  },
+  {
+    q: "du -sh /root/ buyrug'i nima qiladi?",
+    opts: [
+      "/root/ katalogining umumiy hajmini odam o'qiy oladigan formatda chiqaradi",
+      "/root/ ichidagi fayllar ro'yxatini chiqaradi",
+      "/root/ ichidagi fayllarni o'chiradi",
+      "Disk bo'shlig'ini ko'rsatadi"
+    ],
+    ans: [0],
+    hint: "-s=summary, -h=human readable"
+  },
+  {
+    q: "Qaysi buyruq sus1, sus2, sus3 papkalarini YARATMAYDI?",
+    opts: ["mkdir sus{1-3}","mkdir sus{1..3}","mkdir sus{1, 2, 3}"],
+    ans: [0],
+    hint: "Brace expansion sintaksisiga e'tibor bering"
+  },
+  {
+    q: "aboba nomidan student kompyuteriga SSH orqali masofadan ulanish?",
+    opts: ["ssh aboba@student","ssh student@aboba"],
+    ans: [0],
+    hint: "user@host formatida"
+  },
+  {
+    q: "Cron-da har 4 soatda bir marta chaqirish?",
+    opts: ["* */4 * * *","4 * * * *","* 4 * * *","*/240 * * * *"],
+    ans: [0],
+    hint: "*/4 = har 4 da bir"
+  },
+  {
+    q: "while true; false; echo \"success\" — nima chiqadi?",
+    opts: ["success","Cheksiz success","Hech narsa","0"],
+    ans: [2],
+    hint: "false buyrug'i nima qiladi?"
+  },
+  {
+    q: "nginx bosh jarayoni (master process) nima uchun javobgar?",
+    opts: [
+      "Faqat ishchi jarayonlarni boshqarish",
+      "Konfiguratsiyalarni o'qish, tekshirish va ishchi jarayonlarni boshqarish",
+      "Ishchi jarayonlarni ishga tushirish, to'xtatish, sozlangan miqdorda saqlash, socketlarni boshqarish"
+    ],
+    ans: [1, 2],
+    hint: "Ikkita to'g'ri javob bor"
+  },
+  {
+    q: "Quyidagilardan qaysi biri matn muharriri EMAS?",
+    opts: ["nano","vim","mcedit","cat"],
+    ans: [3],
+    hint: "cat = faylni chiqarish"
+  },
+  {
+    q: "/var/log/auth.log nima?",
+    opts: [
+      "Muvaffaqiyatli va muvaffaqiyatsiz autentifikatsiya urinishlarini o'z ichiga olgan jurnal",
+      "Faqat muvaffaqiyatli autentifikatsiya urinishlarini o'z ichiga olgan jurnal",
+      "Faqat muvaffaqiyatsiz autentifikatsiya urinishlarini o'z ichiga olgan jurnal",
+      "Hozirda tizimga kirgan foydalanuvchilar haqida ma'lumot"
+    ],
+    ans: [0],
+    hint: "auth = authentication"
+  },
+  {
+    q: "Grafana nima?",
+    opts: [
+      "Ma'lumotlarni vizualizatsiya qilish vositasi",
+      "Ubuntu uchun grafik qobiq"
+    ],
+    ans: [0],
+    hint: "Dashboard va monitoring"
+  },
+  {
+    q: "Bash-da faylning mavjudligini va u katalog ekanligini tekshirish uchun qaysi parametr?",
+    opts: ["-l","-d","-s","-f"],
+    ans: [1],
+    hint: "-d = directory"
+  },
+  {
+    q: "OSI modelining qatlamlari qaysilar?",
+    opts: [
+      "Fizik",
+      "Tarmoq",
+      "Seansl",
+      "Virtual",
+      "Tarmoqlararo",
+      "Texnik",
+      "Transport",
+      "Taqdimot",
+      "Amaliy"
+    ],
+    ans: [0, 1, 2, 6, 7, 8],
+    hint: "7 ta qatlam bor: Fizik, Kanal, Tarmoq, Transport, Seans, Taqdimot, Amaliy"
+  },
+  {
+    q: "for tsiklida faylni satrma-satr chiqarish uchun qaysi IFS ishlatiladi?",
+    opts: ["IFS=$'/n'","IFS=$'//n'","IFS=$'\\n'","IFS=$'ln'"],
+    ans: [2],
+    hint: "Yangi satr belgisi"
+  },
+  {
+    q: "iptables-dan barcha qoidalarni o'chirish buyrug'i?",
+    opts: ["iptables -F","iptables -L","iptables -X","iptables -R"],
+    ans: [0],
+    hint: "-F = flush (tozalash)"
+  },
+  {
+    q: "eth0 tarmoq interfeysi bo'yicha ma'lumot ko'rish uchun to'g'ri buyruqlar?",
+    opts: ["tcpdump -i eth0","tcpdump eth0","tcpdump --interface eth0","tcpdump -l eth0"],
+    ans: [0, 2],
+    hint: "-i va --interface ekvivalent"
+  },
+  {
+    q: "Docker obrazini o'chirish buyrug'i?",
+    opts: ["docker images rm nginx","docker rmi nginx","docker rm -i nginx","docker rm nginx"],
+    ans: [1],
+    hint: "rmi = remove image"
+  },
+  {
+    q: "Barcha kiruvchi paketlarni qabul qilishni o'chiradigan iptables qoidasi?",
+    opts: [
+      "iptables -policy INPUT DROP",
+      "iptables -policy FORWARD REJECT",
+      "iptables -policy POSTROUTING REJECT",
+      "iptables -policy POSTROUTING DROP"
+    ],
+    ans: [0],
+    hint: "INPUT zanjiri kiruvchi paketlar uchun"
+  },
+  {
+    q: "SSH-ning eng xavfsiz autentifikatsiya usuli qaysi?",
+    opts: ["Parol orqali","Xesh-funksiya orqali","Kalit orqali","Maxfiy savol orqali"],
+    ans: [2],
+    hint: "Public/private key pair"
+  },
+  {
+    q: "Virtualizatsiya jarayoni nima?",
+    opts: [
+      "Gipervizordan foydalanib mashina dasturiy (virtual) versiyasini yaratish jarayoni",
+      "Fizik mashinadan CPU, xotira va saqlash resurslarini ajratib oladigan dasturiy mashina versiyasini yaratish jarayoni",
+      "Fizik mashinadan qarz olingan CPU, xotira va saqlash resurslarini taqsimlagan holda dasturiy mashina versiyasini yaratish jarayoni",
+      "OT yadrosining resurslaridan foydalanib dasturiy mashina versiyasini yaratish jarayoni"
+    ],
+    ans: [2],
+    hint: "Resurslarni bo'lishish"
+  },
+  {
+    q: "top buyrug'ida xotira ma'lumotlarini ko'rsatish rejimini almashtirish uchun qaysi tugma?",
+    opts: ["s","m","n","d"],
+    ans: [1],
+    hint: "m = memory"
+  },
+  {
+    q: "Pipe nima?",
+    opts: [
+      "Bir buyruqning standart chiqishini boshqasining standart kirishiga yo'naltirish (argument sifatida emas)",
+      "Standart chiqishni faylga yo'naltirish",
+      "Standart chiqishni /dev/null ga yo'naltirish",
+      "Jarayonlar o'rtasida o'zaro ta'sir qilish uchun ishlatiladigan bir tomonlama ma'lumot kanali"
+    ],
+    ans: [0],
+    hint: "| operatori"
+  },
+  {
+    q: "mydir=$(pwd) nima qiladi?",
+    opts: [
+      "mydir o'zgaruvchisi pwd buyrug'ini nusxalaydi",
+      "pwd buyrug'i chiqishini mydir o'zgaruvchisiga saqlaydi",
+      "pwd buyrug'i chiqishini mydir fayliga saqlaydi",
+      "mydir nomli katalogni pwd yo'lida yaratadi"
+    ],
+    ans: [1],
+    hint: "$() = command substitution"
+  },
+  {
+    q: "docker update nima qiladi?",
+    opts: [
+      "Konteyner konfiguratsiyasini yangilaydi",
+      "Yangi versiyaga yangilanishi mumkin bo'lgan konteynerlar ro'yxatini ko'rsatadi",
+      "To'xtatilgan konteynerlarni ishga tushiradi",
+      "Konteynerning birinchi ishga tushirilishi"
+    ],
+    ans: [0],
+    hint: "RAM, CPU cheklovlarini o'zgartirish"
+  },
+  {
+    q: "Docker arxitekturasining asosiy qismlari qaysilar?",
+    opts: [
+      "Docker xizmati, obrazlar, konteynerlar, Docker Registry, DockerHub",
+      "Docker xizmati, obrazlar, konteynerlar, Docker Registry",
+      "Docker xizmati, obrazlar, konteynerlar, Docker Cloud",
+      "Docker xizmati, Dockerfile, konteynerlar, Docker Registry, DockerHub"
+    ],
+    ans: [0],
+    hint: "5 ta asosiy komponent"
+  },
+  {
+    q: "ngx_http_stub_status_module-dan foydalanish uchun qaysi parametr kerak?",
+    opts: [
+      "ngx_http_stub_status_module",
+      "http_stub_status_module",
+      "--with-http_stub_status_module",
+      "--with-ngx_http_stub_status_module"
+    ],
+    ans: [2],
+    hint: "--with- prefiksi bilan"
+  },
+  {
+    q: "Skript qaysi fayl uchun ishlaydi?\n#!/bin/bash\ncount=1\ncat ${!#} | while read wrd\ndo\ncount=$(($count+1))\ndone\necho \"$count\"\n./script.sh file1 file! File3",
+    opts: [
+      "file1 dagi qatorlar soni",
+      "file! dagi qatorlar soni",
+      "File3 dagi qatorlar soni",
+      "Xato"
+    ],
+    ans: [2],
+    hint: "${!#} = oxirgi argument"
+  },
+  {
+    q: "Cron-da har 4 soatda bir marta skriptni chaqirish?",
+    opts: ["* */4 * * *","4 * * * *","* 4 * * *","*/240 * * * *"],
+    ans: [0],
+    hint: "Daqiqa soat kun oy hafta"
+  },
+  {
+    q: "ls -la buyrug'i qanday ma'lumot chiqaradi?",
+    opts: [
+      "Faqat fayl nomlari",
+      "Kirish huquqlari, qattiq havolalar soni, egasi, guruh, hajm, o'zgartirish vaqti, fayl nomi",
+      "Faqat yashirin fayllar",
+      "Faqat kataloglar"
+    ],
+    ans: [1],
+    hint: "-l=long format, -a=all files"
+  },
+  {
+    q: "du -sh da -s kalitining vazifasi nima?",
+    opts: [
+      "Katalog hajmini odam o'qiy oladigan birlikda ko'rsatish",
+      "Oxirida barcha papkalarning umumiy hajmini ko'rsatish",
+      "Tarkibini qo'shib, katalogning umumiy hajmini ko'rsatish",
+      "Pastki kataloglar hajmini hisoblashdan chiqarib tashlash"
+    ],
+    ans: [2],
+    hint: "-s = summary"
+  },
+  {
+    q: "Cron-da har dushanba kuni ishlaydigan skript?",
+    opts: ["* * * * */1","0 0 * * MON","* * 7 * *","0 0 7 * *"],
+    ans: [1],
+    hint: "MON = Monday"
+  },
+  {
+    q: "sudo rm -rf /* buyrug'i nima qiladi?",
+    opts: [
+      "Foydalanuvchi joylashgan katalogdagi hamma narsani o'chiradi",
+      "Diskdagi ildiz bo'limidagi barcha ma'lumotlarni yo'q qiladi",
+      "Foydalanuvchi joylashgan katalogdagi barcha fayllarni o'chiradi",
+      "Hech narsa, bunday buyruq yo'q"
+    ],
+    ans: [1],
+    hint: "JUDA XAVFLI buyruq! /* = hammasi"
+  },
+  {
+    q: "Qaysi buyruq chiqishi boshqalariga qaraganda farq qiladi?",
+    opts: [
+      "ls dir1; ls dir2; ls dir3",
+      "ls {dir1,dir2,dir3}",
+      "ls dir{1,2,3}",
+      "ls dir1 dir2 dir3"
+    ],
+    ans: [0],
+    hint: "; bilan ajratilgan alohida buyruqlar"
+  },
+  {
+    q: "Bir buyruq chiqishini STDERR ga yo'naltirish?",
+    opts: [
+      "echo \"matn\" > &2",
+      "echo \"matn\" >> &2",
+      "echo \"matn\" > !2",
+      "echo \"matn\" > $2"
+    ],
+    ans: [0],
+    hint: "2 = stderr file descriptor"
+  },
+  {
+    q: "Bu skriptda xato qayerda?\nfor ((var1=1; var1<15; var1++))\ndo\nif [$var1 -gt 5] && [$var1 -lt 10]\nthen\ncontinue\nfi\necho \"value: $var1\"\ndone",
+    opts: ["if da xato","for parametrlarida xato","for da xato","Xato yo'q"],
+    ans: [0],
+    hint: "[ ] ichida bo'shliqlar muhim"
+  },
+  {
+    q: "Faqat /sus ichidagi fayllarni /amongus ga nusxalaydigan buyruq?",
+    opts: ["cp /sus /amongus","cp /sus/* /amongus","cp -f /sus/ /amongus","cp /sus/~ /amongus"],
+    ans: [1],
+    hint: "/* = katalog ichidagi barcha fayllar"
+  },
+  {
+    q: "sshd kabi nomlarning oxiridagi D harfi nimani anglatadi?",
+    opts: [
+      "Xizmat sifatida ishlaydigan jarayon (demon)",
+      "Disable holatidagi jarayon",
+      "Tizim foydalanuvchisi tomonidan ishga tushirilgan jarayon",
+      "Ota jarayondan meros olgan jarayon"
+    ],
+    ans: [0],
+    hint: "d = daemon"
+  },
+  {
+    q: "du qanday qisqartmadan iborat?",
+    opts: ["disk usage","disk user","disk used","disk update"],
+    ans: [0],
+    hint: "Disk foydalanishi"
+  },
+  {
+    q: "Dockerfile-da FROM nima uchun kerak?",
+    opts: [
+      "Asosiy (ota) obrazni belgilaydi",
+      "Doimiy saqlash bilan ishlash uchun montaj nuqtasini yaratadi",
+      "Ishchi katalogni ko'rsatadi",
+      "Buyruqni bajaradi va obraz qatlamini yaratadi"
+    ],
+    ans: [0],
+    hint: "FROM base_image"
+  },
+  {
+    q: "dockle nima?",
+    opts: [
+      "Konteyner obrazlarining xavfsizligini tekshirish va zaifliklarni topish vositasi",
+      "Docker uchun grafik interfeys",
+      "Docker compose vositasi",
+      "Konteyner monitoring tizimi"
+    ],
+    ans: [0],
+    hint: "Security linting tool"
+  },
+  {
+    q: "Obrazni repozitoriyga yuklash buyrug'i?",
+    opts: ["docker pull","docker push","docker commit","docker save"],
+    ans: [1],
+    hint: "push = yuklab yuborish, pull = tortib olish"
+  },
+  {
+    q: "Dockerfile-da RUN va CMD orasidagi farq nima?",
+    opts: [
+      "RUN faqat yig'ish vaqtida bir marta bajariladi va yangi qatlam yaratadi; CMD standart buyruqni belgilaydi, yig'ish vaqtida bajarilmaydi",
+      "RUN faqat yig'ish vaqtida bir marta bajariladi; CMD yig'ishdan so'ng bajariladi",
+      "RUN yig'ish vaqtida ham, konteyner har ishga tushganda ham bajariladi; CMD yig'ish vaqtida bajarilmaydi",
+      "RUN yig'ishdan oldin bajariladi; CMD yig'ishdan keyin bajariladi"
+    ],
+    ans: [0],
+    hint: "RUN=build time, CMD=runtime"
+  },
+  {
+    q: "registry va repository orasidagi farq nima?",
+    opts: [
+      "registry — obrazlarni saqlash va tarqatish xizmati; repository — bir xil nom, lekin har xil teglar bilan bog'liq obrazlar to'plami",
+      "registry — obrazlarni saqlash xizmati; repository — bir xil tegli obrazlar to'plami",
+      "registry — lokal xizmat; repository — bir xil nom, lekin har xil teglar bilan bog'liq obrazlar to'plami",
+      "registry — uchinchi tomon serverlarida ishlatiladi; repository — lokal registry"
+    ],
+    ans: [0],
+    hint: "DockerHub = registry, nginx = repository"
+  },
+  {
+    q: "Ubuntu ning joriy versiyasini ko'rsatuvchi buyruq?",
+    opts: ["lsb_release -a","uname -a","cat /etc/version","ubuntu --version"],
+    ans: [0],
+    hint: "Linux Standard Base"
+  },
+  {
+    q: "Qaytish kodi kasr son bo'lishi mumkinmi?",
+    opts: ["Ha","Yo'q"],
+    ans: [1],
+    hint: "Faqat 0-255 butun sonlar"
+  },
+  {
+    q: "'Buyruq topilmadi' holati uchun qaysi kod qaytariladi?",
+    opts: ["0","2","126","127"],
+    ans: [3],
+    hint: "127 = command not found"
+  },
+  {
+    q: "$# o'zgaruvchisi nima anglatadi?",
+    opts: [
+      "Oxirgi buyruqning chiqish statusini beradi",
+      "Shell-ning PID-ini beradi",
+      "O'nlik formatda pozitsion parametrlar sonini beradi",
+      "Set ichki buyrug'i yordamida berilgan parametrlar"
+    ],
+    ans: [2],
+    hint: "# = count of arguments"
+  },
+  {
+    q: "Fayl mazmunini niqob bo'yicha almashtirish uchun qaysi buyruq?",
+    opts: ["pwd","grep","replace","sed"],
+    ans: [3],
+    hint: "Stream editor"
+  },
+  {
+    q: "/var/log/dmesg nima?",
+    opts: [
+      "Foydalanuvchilardan olingan xabarlarni o'z ichiga olgan jurnal katalogi",
+      "Tizimdan olingan xabarlarni o'z ichiga olgan jurnal katalogi",
+      "Demonlardan olingan xabarlarni o'z ichiga olgan tizim jurnali",
+      "Yadrrodan olingan xabarlarni o'z ichiga olgan tizim jurnali"
+    ],
+    ans: [3],
+    hint: "dmesg = diagnostic message"
+  },
+  {
+    q: "/var/log/syslog nima?",
+    opts: [
+      "Faqat tizim xatolari xabarlari yoziladigan global tizim jurnali",
+      "Yadro, turli xizmatlar, tarmoq interfeyslari va h.k. xabarlari yoziladigan global tizim jurnali",
+      "Tanlangan tizim voqealari xabarlari yoziladigan global tizim jurnali",
+      "Faqat ishga tushirilgan demonlar xabarlari yoziladigan global tizim jurnali"
+    ],
+    ans: [1],
+    hint: "Asosiy tizim jurnali"
+  },
+  {
+    q: "Faylning oxirgi 15 satrini ko'rsatish buyrug'i?",
+    opts: [
+      "tail -last15 text.txt",
+      "tail -t15 text.txt",
+      "tail -s15 text.txt",
+      "tail -n15 text.txt"
+    ],
+    ans: [3],
+    hint: "-n = number of lines"
+  },
+  {
+    q: "Har soatda skriptni ishga tushirish uchun cron yozuvi?",
+    opts: [
+      "* 0 * * * script.sh",
+      "* 60 * * * script.sh",
+      "* */60 * * * script.sh",
+      "0 * * * * script.sh"
+    ],
+    ans: [3],
+    hint: "0 daqiqa, har soat"
+  },
+  {
+    q: "true\necho $?\n— nima chiqaradi?",
+    opts: ["true","0","1","$"],
+    ans: [1],
+    hint: "$? = oxirgi buyruq exit code"
+  },
+  {
+    q: "> va >> orasidagi farq nima?",
+    opts: [
+      "> avvalgi faylni o'chirib qayta yozadi, >> esa qo'shib yozadi",
+      ">> avvalgi faylni o'chirib qayta yozadi, > esa qo'shib yozadi",
+      "Hech qanday farq yo'q",
+      "> faqat yangi fayl yaratadi"
+    ],
+    ans: [0],
+    hint: "> = overwrite, >> = append"
+  },
+  {
+    q: "172.10.8.160/24 manzilida pastki tarmoq maskasi nima?",
+    opts: ["255.255.255.0","172.10.8.255","255.255.0.0","255.0.0.0"],
+    ans: [0],
+    hint: "/24 = 24 ta bit = 255.255.255.0"
+  },
+  {
+    q: "SSH ning standart port raqami?",
+    opts: ["22","443","80","50000"],
+    ans: [0],
+    hint: "HTTP=80, HTTPS=443, SSH=22"
+  },
+  {
+    q: "Grafana qaysi portda ishlaydi?",
+    opts: ["3000","8000","8080","443"],
+    ans: [0],
+    hint: "Standart Grafana porti"
+  },
+  {
+    q: "\\> va > orasidagi farq nima?",
+    opts: [
+      "Taqqoslash operatori va chiqishni yo'naltirish",
+      "Farqi yo'q"
+    ],
+    ans: [0],
+    hint: "\\ ekranlash (escape) belgisi"
+  },
+  {
+    q: "top buyrug'i nimani KO'RSATMAYDI?",
+    opts: [
+      "CPU resurslari foydalanishi",
+      "Jarayonlar",
+      "Tarmoq trafigi resurslari foydalanishi",
+      "Operativ xotira foydalanishi"
+    ],
+    ans: [2],
+    hint: "top = task manager, tarmoq emas"
+  },
+  {
+    q: "Operatsion tizimda qaysi parametrlarni monitoring qilish mumkin?",
+    opts: ["CPU","Diskdagi joy","Tizim holati","Veb-saytga kirish","Tarmoq trafigi"],
+    ans: [0, 1, 2],
+    hint: "3 ta to'g'ri javob"
+  },
+  {
+    q: "sshd xizmati qaysi protokol bo'yicha ishlaydi?",
+    opts: ["TCP","UDP"],
+    ans: [0],
+    hint: "SSH = xavfsiz ulanish = TCP"
+  },
+  {
+    q: "/ katalogi nima?",
+    opts: [
+      "Fayl tizimining ildizi",
+      "Superuser uy katalogi"
+    ],
+    ans: [0],
+    hint: "Root directory"
+  },
+  {
+    q: "vi muharririda saqlash buyrug'i?",
+    opts: [":w",":s",":save",":write"],
+    ans: [0],
+    hint: ":w = write"
+  },
+  {
+    q: "localhost nima? (Zaxiralangan domen nomi)",
+    opts: ["192.168.0.255/24","127.0.0.1/8","192.0.1.0/24","127.0.0.1/24"],
+    ans: [1],
+    hint: "Loopback address"
+  },
+  {
+    q: "Dinamik port qaysi?",
+    opts: ["80","443","8080","50000"],
+    ans: [3],
+    hint: "49152-65535 = dinamik portlar"
+  },
+  {
+    q: "SNAT nima?",
+    opts: [
+      "PREROUTING va OUTPUT zanjirida paketning manzil manzili va portini o'zgartirish",
+      "POSTROUTING zanjirida paketning manzil manzili va portini o'zgartirish",
+      "IP sarlavhasining Xizmat Turi maydonidagi bitlarni o'rnatish uchun ishlatiladi",
+      "Matnlarni foydalanuvchi maydoniga jurnalga yozish imkoniyatini beradi"
+    ],
+    ans: [1],
+    hint: "Source NAT = chiquvchi trafik"
+  },
+  {
+    q: "Foydalanuvchi yaratish buyrug'i qaysi?",
+    opts: [
+      "sudoers fayliga qo'shish",
+      "adduser buyrug'i",
+      "useradd buyrug'i",
+      "/etc/password ga qo'shish"
+    ],
+    ans: [1, 2],
+    hint: "Ikkita buyruq ham ishlaydi"
+  },
+  {
+    q: "128.0.1.1/8 manzilining tarmoq adresi nima?",
+    opts: ["127.0.0.1","128.0.0.1","128.0.1.0","128.0.0.0"],
+    ans: [3],
+    hint: "IP & Mask = tarmoq manzili"
+  },
+  {
+    q: "DHCP nima?",
+    opts: [
+      "Lokal tarmoqdagi mijozga statik IP-manzil berish uchun dastur qatlami protokoli",
+      "Veb-saytlarga qulay manzillar orqali kirish imkonini beruvchi standart protokol",
+      "Lokal tarmoqni kichik virtual tarmoqlarga ajratish texnologiyasi",
+      "Lokal tarmoqdagi mijozga dinamik IP-manzil avtomatik tayinlash uchun dastur qatlami protokoli"
+    ],
+    ans: [3],
+    hint: "Dynamic Host Configuration Protocol"
+  },
+  {
+    q: "false\necho $?\n— nima chiqaradi?",
+    opts: ["1","true","$","0"],
+    ans: [0],
+    hint: "false = exit code 1"
+  },
+  {
+    q: "Barcha tizim foydalanuvchilarini ko'rish buyrug'i?",
+    opts: ["cat /etc/passwd","users","who","w"],
+    ans: [0],
+    hint: "passwd fayli barcha foydalanuvchilarni saqlaydi"
+  },
+  {
+    q: "df buyrug'ining odam o'qiy oladigan formatda ma'lumot ko'rsatish uchun kaliti?",
+    opts: ["-h","-l"],
+    ans: [0],
+    hint: "-h = human readable"
+  },
+  {
+    q: "Tizimda nechta port mavjud?",
+    opts: ["65 535","1024","65 536","49 152"],
+    ans: [0],
+    hint: "0 dan 65535 gacha"
+  },
+  {
+    q: "Docker obrazini yuklash buyrug'i?",
+    opts: ["docker load","docker image load","docker pull","docker import"],
+    ans: [0, 1],
+    hint: "Ikkala variant ham to'g'ri"
+  },
+  {
+    q: "10.0.0.20/28 manzilining tarmoq adresi nima?",
+    opts: ["10.0.0.1","10.0.0.8","10.0.0.16","10.0.0.0"],
+    ans: [2],
+    hint: "/28 = 4 ta host bit, 10.0.0.16 bloki"
+  },
+  {
+    q: "255.255.255.0 maskasi prefiks yozuvida qanday?",
+    opts: ["/24","127.0.0.0","/16","/8"],
+    ans: [0],
+    hint: "24 ta bit yoniq"
+  },
+  {
+    q: "chmod +x nima anglatadi?",
+    opts: ["Bajarish huquqini berish","O'chirish huquqini berish"],
+    ans: [0],
+    hint: "+x = execute permission"
+  },
+  {
+    q: "ls -l kalit nima beradi?",
+    opts: ["Qo'shimcha ma'lumotlar chiqaradi","Faqat simvolik havolalar ro'yxatini chiqaradi"],
+    ans: [0],
+    hint: "-l = long listing format"
+  },
+  {
+    q: "ICMP nima?",
+    opts: [
+      "Ma'lumot uzatishda yuzaga kelgan xato va favqulodda holatlar haqida xabarlarni uzatish uchun ishlatiladigan protokol",
+      "IP manzilni dinamik tayinlash uchun ishlatiladigan protokol"
+    ],
+    ans: [0],
+    hint: "ping ICMP ishlatadi"
+  },
+  {
+    q: "iptables-da FORWARD zanjiri nima uchun ishlatiladi?",
+    opts: ["Paketlarni qayta yo'naltirish","Paketlarni marshrutlash"],
+    ans: [0],
+    hint: "Tarmoqlar orasida o'tuvchi paketlar"
+  },
+  {
+    q: "Quyidagilardan qaysi biri localhost?",
+    opts: ["127.255.255.1","1.1.1.1","255.0.0.1","192.168.0.1"],
+    ans: [0],
+    hint: "127.x.x.x = loopback"
+  },
+  {
+    q: "Tizim portlari (well-known ports) qaysi oraliqda?",
+    opts: ["0 - 1023","1024 - 49151","49152 - 65535"],
+    ans: [0],
+    hint: "0-1023 = tizim portlari"
+  },
+  {
+    q: "/28 pastki tarmoqda nechta host bo'lishi mumkin?",
+    opts: ["14","16","30","254"],
+    ans: [0],
+    hint: "2^4 - 2 = 14"
+  },
+  {
+    q: "iptables-da qoidaga qo'llaniladigan zanjirni ko'rsatish parametri?",
+    opts: ["-D","-C","-j","-A"],
+    ans: [3],
+    hint: "-A = append (zanjirga qo'shish)"
+  },
+  {
+    q: "iptables-da paket qoidaga mos kelsa bajariladigan amalni ko'rsatish parametri?",
+    opts: ["-D","-C","-A","-j"],
+    ans: [3],
+    hint: "-j = jump (action)"
+  },
+  {
+    q: "docker run-da xost katalogini konteynerga montaj qilish parametri?",
+    opts: ["-e","-v","-w","-m"],
+    ans: [1],
+    hint: "-v = volume"
+  },
+  {
+    q: "Ishga tushirilgan konteynerdan yangi obraz yaratish buyrug'i?",
+    opts: ["docker commit","docker save","docker build","docker export"],
+    ans: [0],
+    hint: "commit = changes to image"
+  },
+  {
+    q: "docker run-da konteyner xotira cheklovini qo'yish parametri?",
+    opts: ["--cpus","--limit-mem","--mem-limit","--memory"],
+    ans: [3],
+    hint: "--memory 512m"
+  },
+  {
+    q: "Docker Compose-da bir xizmatning boshqasiga bog'liqligini ko'rsatish parametri?",
+    opts: ["networks","links","volumes","depends_on"],
+    ans: [3],
+    hint: "depends_on: - db"
+  },
+  {
+    q: "Barcha to'xtatilgan konteynerlarni qayta ishga tushirish buyrug'i?",
+    opts: ["docker run","docker start","docker restart","docker up"],
+    ans: [1],
+    hint: "start = to'xtatilganni ishga tushirish"
+  },
+  {
+    q: "docker run-da konteyner portini xostga nashr qilish parametri?",
+    opts: ["-P","--port","--expose","-p"],
+    ans: [3],
+    hint: "-p 8080:80"
+  },
+  {
+    q: "Docker Compose konfiguratsiyasi uchun fayl formati?",
+    opts: ["YAML","JSON","XML","INI"],
+    ans: [0],
+    hint: "docker-compose.yml"
+  },
+  {
+    q: "Konteynerga nom bilan ishga tushirish buyrug'i?",
+    opts: ["docker run --name","docker launch --name","docker start --name","docker create --name"],
+    ans: [0],
+    hint: "docker run --name mycontainer image"
+  },
+  {
+    q: "Docker Compose-da xizmat uchun ishlatiladigan obrazni ko'rsatish kaliti?",
+    opts: ["image","container","build","service"],
+    ans: [0],
+    hint: "image: nginx:latest"
+  },
+  {
+    q: "Docker Compose-da muhit o'zgaruvchilarini o'rnatish kaliti?",
+    opts: ["variables","env","env_vars","environment"],
+    ans: [3],
+    hint: "environment:\n  - KEY=value"
+  },
+  {
+    q: "Docker Compose-da volume montaj qilish parametri?",
+    opts: ["binds","volumes","storage","mounts"],
+    ans: [1],
+    hint: "volumes:\n  - ./data:/data"
+  },
+  {
+    q: "Docker Compose-da portlarni nashr qilish parametri?",
+    opts: ["publish","expose","ports","forward"],
+    ans: [2],
+    hint: "ports:\n  - \"8080:80\""
+  },
+  {
+    q: "Docker Compose da barcha xizmatlar loglarini ko'rish buyrug'i?",
+    opts: ["docker-compose view","docker-compose logs","docker-compose show","docker-compose display"],
+    ans: [1],
+    hint: "docker-compose logs -f"
+  },
+  {
+    q: "CMD va ENTRYPOINT orasidagi farq nima?",
+    opts: [
+      "CMD standart buyruqni belgilaydi, qayta yozish mumkin; ENTRYPOINT har doim bajariladigan o'zgarmas buyruq",
+      "ENTRYPOINT standart buyruqni belgilaydi, CMD o'zgarmas",
+      "Ikkalasi ham bir xil",
+      "CMD faqat build vaqtida bajariladi"
+    ],
+    ans: [0],
+    hint: "CMD = default args, ENTRYPOINT = main command"
+  },
+  {
+    q: "COPY va ADD orasidagi farq nima?",
+    opts: [
+      "COPY lokal fayllarni nusxalaydi; ADD arxivlarni yoyadigan va URL dan yuklaydigan qo'shimcha imkoniyatga ega",
+      "ADD lokal fayllarni nusxalaydi, COPY arxivlarni yoyadi",
+      "Ikkalasi ham bir xil",
+      "COPY URL dan yuklay oladi"
+    ],
+    ans: [0],
+    hint: "COPY = oddiy nusxalash, ADD = kuchaytirilgan"
+  },
+  {
+    q: "docker run-da belgilangan tarmoqqa konteyner ulash parametri?",
+    opts: ["--connect","--link","--network","--net"],
+    ans: [2],
+    hint: "--network mynetwork"
+  },
+  {
+    q: "Qaysi Docker tarmoq turi har xil xostlardagi konteynerlarning o'zaro muloqot qilishiga imkon beradi?",
+    opts: ["bridge","host","overlay","macvlan"],
+    ans: [2],
+    hint: "Distributed network"
+  },
+  {
+    q: "Mavjud tarmoqqa ishga tushirilgan konteyner ulash buyrug'i?",
+    opts: [
+      "docker network attach",
+      "docker network link",
+      "docker network connect",
+      "docker network join"
+    ],
+    ans: [2],
+    hint: "connect = ulash"
+  },
+  {
+    q: "macvlan tarmoq turi haqida to'g'ri ifoda qaysi?",
+    opts: [
+      "Konteynerlar o'z MAC-manzillarini oladi va tarmoqdagi to'liq qurilmalar sifatida ishlaydi",
+      "Konteynerlar xost tarmog'idan to'g'ridan-to'g'ri foydalanadi",
+      "Konteynerlar tarmoq ulanishlaridan to'liq izolyatsiya qilingan",
+      "Konteynerlar faqat bitta Docker xostida o'zaro muloqot qila oladi"
+    ],
+    ans: [0],
+    hint: "MAC virtualization"
+  },
+  {
+    q: "Docker tarmog'ini o'chirish buyrug'i?",
+    opts: ["docker network rm","docker network destroy","docker network delete","docker network remove"],
+    ans: [0],
+    hint: "rm = remove"
+  },
+  {
+    q: "Docker Compose servislarini yaratish va ishga tushirish buyrug'i?",
+    opts: ["docker-compose up","docker-compose run","docker-compose start","docker-compose build"],
+    ans: [0],
+    hint: "up = build + start"
+  },
+  {
+    q: "Docker Compose-da barcha konteynerlar, tarmoqlar va volumelarni to'xtatib o'chirish buyrug'i?",
+    opts: ["docker-compose remove","docker-compose stop","docker-compose destroy","docker-compose down"],
+    ans: [3],
+    hint: "down = stop + remove"
+  },
+  {
+    q: "Dockerfile-da rasm metama'lumotlarini belgilash kalit so'zi?",
+    opts: ["LABEL","META","TAG","INFO"],
+    ans: [0],
+    hint: "LABEL key=value"
+  },
+  {
+    q: "Docker konteynerini tarmoq opsiyasiz ishga tushirganda standart tarmoq turi?",
+    opts: ["overlay","none","host","bridge"],
+    ans: [3],
+    hint: "Standart = bridge"
+  },
+  {
+    q: "Dockerfile-da portlarni e'lon qilish kalit so'zi?",
+    opts: ["EXPOSE","PORT","LISTEN","NETWORK"],
+    ans: [0],
+    hint: "EXPOSE 80"
+  },
+  {
+    q: "Dockerfile-da muhit o'zgaruvchilarini o'rnatish kalit so'zi?",
+    opts: ["VAR","SETENV","EXPORT","ENV"],
+    ans: [3],
+    hint: "ENV KEY=value"
+  },
+  {
+    q: "Dockerfile-da ishchi katalogni belgilash kalit so'zi?",
+    opts: ["CHDIR","SETDIR","DIRECTORY","WORKDIR"],
+    ans: [3],
+    hint: "WORKDIR /app"
+  },
+  {
+    q: "Ko'p konteynerli Docker ilovalarini tavsiflash uchun qaysi fayl ishlatiladi?",
+    opts: [
+      "multi-docker.yml",
+      "docker-compose.yml",
+      "Docker.config",
+      "Dockerfile"
+    ],
+    ans: [1],
+    hint: "Docker Compose"
+  },
+  {
+    q: "Docker konteynerining loglarini ko'rish buyrug'i?",
+    opts: ["docker status","docker report","docker view","docker logs"],
+    ans: [3],
+    hint: "docker logs <container>"
+  },
+  {
+    q: "Dockerfile yig'ish jarayonida konteynerda buyruqlarni bajarish kalit so'zi?",
+    opts: ["RUN","EXEC","CMD","SHELL"],
+    ans: [0],
+    hint: "RUN apt-get install -y nginx"
+  },
+  {
+    q: "Dockerfile-da konteyner ishga tushganda bajariladigan buyruqni belgilash kalit so'zi?",
+    opts: ["STARTCMD","INIT","ENTRYPOINT","BEGIN"],
+    ans: [2],
+    hint: "ENTRYPOINT [\"nginx\", \"-g\", \"daemon off;\"]"
+  },
+  {
+    q: "Konteynerizatsiya va virtualizatsiya orasidagi farq nima?",
+    opts: [
+      "Konteynerizatsiya OS darajasida ilovalarni izolyatsiya qiladi (engil); Virtualizatsiya o'z OS si bilan to'liq virtual mashinalar yaratadi (og'ir)",
+      "Virtualizatsiya OS darajasida ilovalarni izolyatsiya qiladi; Konteynerizatsiya to'liq virtual mashinalar yaratadi",
+      "Ikkalasi ham bir xil",
+      "Konteynerizatsiya faqat Windows-da ishlaydi"
+    ],
+    ans: [0],
+    hint: "Container=shared kernel, VM=separate kernel"
+  },
+  {
+    q: "Xost tarmog'ini to'g'ridan-to'g'ri (izolyatsiyasiz) ishlatadigan Docker tarmoq drayveri?",
+    opts: ["none","host","bridge","macvlan"],
+    ans: [1],
+    hint: "host = xost tarmoqdan foydalanish"
+  },
+  {
+    q: "Konteynerning barcha tarmoq ulanishlarini o'chiradigan Docker tarmoq drayveri?",
+    opts: ["bridge","host","none","macvlan"],
+    ans: [2],
+    hint: "none = tarmoqsiz"
+  },
+  {
+    q: "Yangi bridge tipidagi foydalanuvchi tarmog'i yaratish buyrug'i?",
+    opts: [
+      "docker network init bridge",
+      "docker network create --driver bridge",
+      "docker network new bridge",
+      "docker network build bridge"
+    ],
+    ans: [1],
+    hint: "docker network create --driver bridge mynet"
+  },
+  {
+    q: "Cron-da har 2 kunda bir marta tushda ishga tushirish?",
+    opts: ["0 12 */2 * *","*/2 12 * * *","0 */2 * * *","12 0 */2 * *"],
+    ans: [0],
+    hint: "0=daqiqa, 12=soat, */2=har 2 kun"
+  },
+  {
+    q: "gitlab-ci-da bash-skriptga parametrlar qanday uzatiladi?",
+    opts: [
+      "script:\n  -extends CI_PROJECT_NAME",
+      "script: (export CI_PROJECT_NAME)",
+      "script\n  -export CI_PROJECT_NAME",
+      "script:\n  -export .gitlab-ci.yml"
+    ],
+    ans: [1],
+    hint: "export orqali muhit o'zgaruvchisi"
+  },
+  {
+    q: "Nmap va ping-dan qaysi biri xostning tarmoqdagi mavjudligini aniqroq aniqlaydi?",
+    opts: ["nmap","ping","ikkalasi ham teng"],
+    ans: [0],
+    hint: "nmap port skanerlashdan ham foydalanadi"
+  }
+];
+
+// ── STATE ──
+let questions = [];
+let current = 0;
+let selected = new Set();
+let answered = false;
+let score = { correct: 0, wrong: 0 };
+let history = []; // {q, userAns, correctAns, ok}
+
+const TOTAL = 30;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  questions = shuffle(ALL_QUESTIONS).slice(0, TOTAL);
+  current = 0;
+  score = { correct: 0, wrong: 0 };
+  history = [];
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  selected.clear();
+  const q = questions[current];
+  const isMulti = q.ans.length > 1;
+
+  document.getElementById('q-current').textContent = current + 1;
+  document.getElementById('q-num-label').textContent = `SAVOL ${String(current + 1).padStart(2, '0')}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-hint').textContent = q.hint ? `💡 ${q.hint}` : '';
+
+  const multiNote = document.getElementById('multi-note');
+  multiNote.style.display = isMulti ? 'flex' : 'none';
+
+  const progress = ((current) / TOTAL) * 100;
+  document.getElementById('progress-fill').style.width = progress + '%';
+
+  document.getElementById('score-correct').textContent = score.correct;
+  document.getElementById('score-wrong').textContent = score.wrong;
+
+  // Build options
+  const list = document.getElementById('options-list');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D','E','F','G','H','I'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.disabled = false;
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => toggleOption(i, btn, isMulti));
+    list.appendChild(btn);
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedback-bar');
+  fb.style.display = 'none';
+  fb.className = 'feedback-bar';
+
+  // Buttons
+  document.getElementById('btn-check').style.display = 'inline-flex';
+  document.getElementById('btn-next').style.display = 'none';
+  document.getElementById('btn-check').disabled = true;
+
+}
+
+function toggleOption(idx, btn, isMulti) {
+  if (answered) return;
+  if (!isMulti) {
+    selected.clear();
+    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('chosen'));
+  }
+  if (selected.has(idx)) {
+    selected.delete(idx);
+    btn.classList.remove('chosen');
+    btn.style.borderColor = '';
+    btn.style.background = '';
+  } else {
+    selected.add(idx);
+    btn.classList.add('chosen');
+    btn.style.borderColor = 'rgba(0,229,255,0.5)';
+    btn.style.background = 'rgba(0,229,255,0.07)';
+  }
+  document.getElementById('btn-check').disabled = selected.size === 0;
+}
+
+
+
+
+function checkAnswer() {
+  if (answered || selected.size === 0) return;
+  answered = true;
+  const q = questions[current];
+  const userArr = [...selected].sort();
+  const correctArr = [...q.ans].sort();
+  const isCorrect = JSON.stringify(userArr) === JSON.stringify(correctArr);
+
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    b.style.borderColor = '';
+    b.style.background = '';
+    if (selected.has(i) && q.ans.includes(i)) b.classList.add('correct');
+    else if (selected.has(i) && !q.ans.includes(i)) b.classList.add('wrong');
+    else if (!selected.has(i) && q.ans.includes(i)) b.classList.add('reveal');
+  });
+
+  if (isCorrect) {
+    score.correct++;
+    history.push({ q: q.q, userAns: userArr, correctAns: q.ans, opts: q.opts, ok: true });
+    showFeedback(true, "✅ To'g'ri!");
+  } else {
+    score.wrong++;
+    const correctText = q.ans.map(i => q.opts[i]).join(', ');
+    history.push({ q: q.q, userAns: userArr, correctAns: q.ans, opts: q.opts, ok: false });
+    showFeedback(false, `❌ Noto'g'ri. To'g'ri javob: ${correctText}`);
+  }
+  showNext();
+}
+
+function showFeedback(ok, msg) {
+  const fb = document.getElementById('feedback-bar');
+  fb.textContent = msg;
+  fb.className = 'feedback-bar ' + (ok ? 'ok' : 'fail');
+  fb.style.display = 'block';
+}
+
+function showNext() {
+  document.getElementById('btn-check').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-flex';
+  document.getElementById('score-correct').textContent = score.correct;
+  document.getElementById('score-wrong').textContent = score.wrong;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= TOTAL) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+
+  const pct = Math.round((score.correct / TOTAL) * 100);
+  document.getElementById('r-correct').textContent = score.correct;
+  document.getElementById('r-wrong').textContent = score.wrong;
+  document.getElementById('r-pct').textContent = pct + '%';
+
+  setTimeout(() => {
+    document.getElementById('grade-bar').style.width = pct + '%';
+  }, 200);
+
+  let emoji, title, grade, gradeCls;
+  if (pct >= 90) { emoji='🏆'; title='Ustoz!'; grade='A+ — Zo\'lsiz!'; gradeCls='grade-5'; }
+  else if (pct >= 75) { emoji='🎯'; title='Ajoyib!'; grade='A — Yaxshi!'; gradeCls='grade-4'; }
+  else if (pct >= 60) { emoji='👍'; title='Yaxshi!'; grade='B — Qoniqarli'; gradeCls='grade-4'; }
+  else if (pct >= 40) { emoji='📚'; title='O\'rtacha'; grade='C — Mashq kerak'; gradeCls='grade-3'; }
+  else { emoji='💪'; title='Ko\'proq mashq!'; grade='D — Qaytadan o\'qing'; gradeCls='grade-2'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = `${TOTAL} ta savoldan ${score.correct} ta to'g'ri javob:`;
+  const badge = document.getElementById('grade-badge');
+  badge.textContent = grade;
+  badge.className = 'grade-badge ' + gradeCls;
+
+  // Review wrong answers
+  const reviewList = document.getElementById('review-list');
+  reviewList.innerHTML = '';
+  const wrongs = history.filter(h => !h.ok);
+  if (wrongs.length === 0) {
+    reviewList.innerHTML = '<div style="color:var(--success);font-family:var(--mono);font-size:0.85rem;padding:1rem;text-align:center;">🎉 Barcha savollarga to\'g\'ri javob berdingiz!</div>';
+  } else {
+    wrongs.forEach(h => {
+      const correctText = h.correctAns.map(i => h.opts[i]).join(' | ');
+      const userText = h.userAns.length ? h.userAns.map(i => h.opts[i]).join(' | ') : '(Javob berilmadi)';
+      const div = document.createElement('div');
+      div.className = 'review-item r-fail';
+      div.innerHTML = `<div class="r-q">${h.q}</div><div class="r-a">Sizning javobingiz: <span class="r-yours">${userText}</span></div><div class="r-a">To'g'ri javob: <span>${correctText}</span></div>`;
+      reviewList.appendChild(div);
+    });
+  }
+}
+
+function restartQuiz() {
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'block';
+  document.getElementById('start-screen').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
