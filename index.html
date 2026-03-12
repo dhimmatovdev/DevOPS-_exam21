@@ -52,7 +52,7 @@
     z-index: 1;
   }
 
-  /* ── HEADER ── */
+  /* -- HEADER -- */
   .header {
     text-align: center;
     padding: 3rem 0 2.5rem;
@@ -87,7 +87,7 @@
     font-family: var(--mono);
   }
 
-  /* ── START SCREEN ── */
+  /* -- START SCREEN -- */
   #start-screen {
     animation: fadeIn 0.5s ease;
   }
@@ -159,7 +159,7 @@
   }
   .btn-start:active { transform: translateY(0); }
 
-  /* ── QUIZ SCREEN ── */
+  /* -- QUIZ SCREEN -- */
   #quiz-screen { display: none; animation: fadeIn 0.4s ease; }
 
   .quiz-topbar {
@@ -360,7 +360,7 @@
   .feedback-bar.ok { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
   .feedback-bar.fail { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: var(--error); }
 
-  /* ── RESULT SCREEN ── */
+  /* -- RESULT SCREEN -- */
   #result-screen { display: none; animation: fadeIn 0.5s ease; }
   .result-card {
     background: var(--card);
@@ -489,7 +489,7 @@
   .review-item .r-a .r-yours { color: var(--error); }
 
 
-  /* ── LANG SCREEN ── */
+  /* -- LANG SCREEN -- */
   #lang-screen {
     animation: fadeIn 0.5s ease;
     display: flex;
@@ -2302,7 +2302,7 @@ const ALL_QUESTIONS = [
   }
 ];
 
-// ── STATE ──
+// STATE
 let questions = [];
 let current = 0;
 let selected = new Set();
@@ -2510,41 +2510,41 @@ function restartQuiz() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── LANGUAGE SYSTEM ──
+// LANGUAGE SYSTEM
 let currentLang = 'uz';
 
 const TRANSLATIONS = {
   uz: {
-    headerTitle: 'DevOps Bilim Testi',
-    lblTotal: 'Jami savollar',
-    lblPerplay: 'Har o'yinda',
-    rule1: 'Har safar 136 ta savoldan 30 tasi tasodifiy tanlanadi',
-    rule2: 'Ba'zi savollarda bir nechta to'g'ri javob bo'lishi mumkin',
-    rule3: 'Oxirida natija va xatolar ko'rsatiladi',
-    rule4: 'Testni xohlagan marta qayta o'ynashingiz mumkin',
-    btnStart: '▶ Testni Boshlash',
-    lblQuestion: 'Savol',
-    lblMulti: 'Bir nechta to'g'ri javob bor — hammasini belgilang',
-    btnCheck: 'Tekshirish',
-    btnNext: 'Keyingi →',
-    lblCorrectR: 'To'g'ri',
-    lblWrongR: 'Noto'g'ri',
-    lblResultR: 'Natija',
-    btnRestart: '🔄 Qayta O'ynash',
-    reviewTitle: '// xatolar ko'rgazmasi',
-    feedbackOk: '✅ To'g'ri!',
+    headerTitle: "DevOps Bilim Testi",
+    lblTotal: "Jami savollar",
+    lblPerplay: "Har o'yinda",
+    rule1: "Har safar 136 ta savoldan 30 tasi tasodifiy tanlanadi",
+    rule2: "Ba'zi savollarda bir nechta to'g'ri javob bo'lishi mumkin",
+    rule3: "Oxirida natija va xatolar ko'rsatiladi",
+    rule4: "Testni xohlagan marta qayta o'ynashingiz mumkin",
+    btnStart: "▶ Testni Boshlash",
+    lblQuestion: "Savol",
+    lblMulti: "Bir nechta to'g'ri javob bor — hammasini belgilang",
+    btnCheck: "Tekshirish",
+    btnNext: "Keyingi →",
+    lblCorrectR: "To'g'ri",
+    lblWrongR: "Noto'g'ri",
+    lblResultR: "Natija",
+    btnRestart: "🔄 Qayta O'ynash",
+    reviewTitle: "// xatolar ko'rgazmasi",
+    feedbackOk: "✅ To'g'ri!",
     feedbackWrong: (txt) => `❌ Noto'g'ri. To'g'ri javob: ${txt}`,
     resultSub: (c) => `${TOTAL} ta savoldan ${c} ta to'g'ri javob:`,
-    yourAnswer: 'Sizning javobingiz:',
-    correctAnswer: 'To'g'ri javob:',
-    noAnswer: '(Javob berilmadi)',
-    allCorrect: '🎉 Barcha savollarga to'g'ri javob berdingiz!',
+    yourAnswer: "Sizning javobingiz:",
+    correctAnswer: "To'g'ri javob:",
+    noAnswer: "(Javob berilmadi)",
+    allCorrect: "🎉 Barcha savollarga to'g'ri javob berdingiz!",
     grades: [
-      [90, '🏆', 'Ustoz!', 'A+ — Zo'lsiz!', 'grade-5'],
+      [90, '🏆', 'Ustoz!', "A+ — Zo'lsiz!", 'grade-5'],
       [75, '🎯', 'Ajoyib!', 'A — Yaxshi!', 'grade-4'],
       [60, '👍', 'Yaxshi!', 'B — Qoniqarli', 'grade-4'],
-      [40, '📚', 'O'rtacha', 'C — Mashq kerak', 'grade-3'],
-      [0,  '💪', 'Ko'proq mashq!', 'D — Qaytadan o'qing', 'grade-2'],
+      [40, '📚', "O'rtacha", 'C — Mashq kerak', 'grade-3'],
+      [0,  '💪', "Ko'proq mashq!", "D — Qaytadan o'qing", 'grade-2'],
     ],
     qLabel: (n) => `SAVOL ${String(n).padStart(2,'0')}`,
   },
@@ -2670,14 +2670,9 @@ const ALL_QUESTIONS_RU = [
   { q: "Как посмотреть список всех контейнеров?", opts: ["docker ps","docker ps -a","docker ls -a","docker run"], ans: [1], hint: "-a = all (включая остановленные)" },
   { q: "Как посмотреть список образов?", opts: ["docker images","docker ls","docker list","docker img"], ans: [0,1], hint: "Обе команды работают" },
   { q: "Как посмотреть логи контейнера test1?", opts: ["docker test1logs","dockerlogs test1","docker status test1","docker logs test1"], ans: [3], hint: "docker logs <имя_контейнера>" },
-  { q: "Как правильно написать условие needs в gitlab-ci.yml?", opts: ['needs:
- - "имя этапа"','needs: ["имя этапа"]','needs: имя этапа','needs: {"имя этапа"}'], ans: [1], hint: "Формат массива" },
+  { q: "Как правильно написать условие needs в gitlab-ci.yml?", opts: ['needs:\n - "имя этапа"','needs: ["имя этапа"]','needs: имя этапа','needs: {"имя этапа"}'], ans: [1], hint: "Формат массива" },
   { q: "Где можно использовать переменную $CI_JOB_STATUS в gitlab-ci?", opts: ["before_script","after_script","artifacts","script"], ans: [1], hint: "Доступна после завершения задачи" },
-  { q: "Как указать, что этап будет запущен вручную в gitlab-ci?", opts: ["needs:
-- when: manual","build:
-- manual","rules:
-- manual","rules:
-- when: manual"], ans: [3], hint: "rules + when: manual" },
+  { q: "Как указать, что этап будет запущен вручную в gitlab-ci?", opts: ["needs:\n- when: manual","build:\n- manual","rules:\n- manual","rules:\n- when: manual"], ans: [3], hint: "rules + when: manual" },
   { q: "Как указать образ для выполнения стадии в gitlab-ci.yml?", opts: ["image: image_name","image - image_name","image(container_name)","container: container_name"], ans: [0], hint: "Синтаксис YAML" },
   { q: "Какие executor'ы бывают у gitlab-runner?", opts: ["docker","shell","gitlab-executor","ssh","VirtualBox"], ans: [0,1,3,4], hint: "gitlab-executor не существует" },
   { q: "За что отвечает SSH?", opts: ["Передача информации","Управление компьютером","UDP или TCP соединение","TCP-туннелирование"], ans: [1,3], hint: "Два правильных ответа" },
@@ -2686,18 +2681,7 @@ const ALL_QUESTIONS_RU = [
   { q: "Что такое демоны (daemon)?", opts: ["Программы, созданные пользователем по имени Daemon","Общее название всех процессов Linux","Завершённый процесс, чей родитель не получил об этом информацию","Служебная программа или процесс, работающий в фоновом режиме"], ans: [3], hint: "Background service" },
   { q: "Как удалить контейнер с именем nginx?", opts: ["docker -d nginx","docker rm --name nginx","docker rmi nginx","docker rm nginx"], ans: [3], hint: "rm = remove container" },
   { q: "Номер порта для HTTPS по умолчанию?", opts: ["443","80","22","5000"], ans: [0], hint: "HTTP=80, HTTPS=443, SSH=22" },
-  { q: "Что выведет скрипт?
-#!/bin/bash
-function myfunc {
-local temp=$[$value + 5]
-echo "$temp"
-}
-temp=4
-myfunc
-echo $((temp))", opts: ["5
-$9","05
-4","ошибка","5
-4"], ans: [3], hint: "Обратите внимание на область видимости local" },
+  { q: "Что выведет скрипт?\n#!/bin/bash\nfunction myfunc {\nlocal temp=$[$value + 5]\necho \"$temp\"\n}\ntemp=4\nmyfunc\necho $((temp))", opts: ["5\n$9","05\n4","ошибка","5\n4"], ans: [3], hint: "Обратите внимание на область видимости local" },
   { q: "Как вызвать скрипт по cron каждый месяц?", opts: ["0 0 1 * *","* * */12 * *","* * */0 * *","* * 0 * *"], ans: [0], hint: "Первый день каждого месяца в полночь" },
   { q: "Сколько сервисов могут одновременно использовать один сетевой порт?", opts: ["Несколько поочерёдно","До 3 приложений одновременно","Один порт — одно приложение","Неограниченное количество"], ans: [2], hint: "Port unique binding" },
   { q: "Какой параметр bash позволяет узнать, пустой ли файл?", opts: ["-l","-f","-s","-d"], ans: [2], hint: "-s = size > 0" },
@@ -2705,13 +2689,13 @@ $9","05
   { q: "Как открыть второй терминал?", opts: ["Alt+Ctrl+T","Alt+Ctrl+F2","Alt+T","Alt+F2"], ans: [0], hint: "Стандартное сочетание клавиш Ubuntu" },
   { q: "Какая команда выдаёт список всех директорий в текущем каталоге?", opts: ["ls -R","ls","ps -R","ls -r"], ans: [0], hint: "-R = recursive" },
   { q: "Редактор по умолчанию в Linux?", opts: ["vim","vi","mcedit","nano"], ans: [1], hint: "Старейший и стандартный" },
-  { q: "Что является комментарием в bash?", opts: ['echo "Это #комментарий?"','echo 'Это #комментарий?'','echo Это \#комментарий?','echo Это #комментарий?'], ans: [3], hint: "# начинает комментарий без кавычек" },
+  { q: "Что является комментарием в bash?", opts: ['echo "Это #комментарий?"',"echo 'Это #комментарий?'","echo Это \\#комментарий?","echo Это #комментарий?"], ans: [3], hint: "# начинает комментарий без кавычек" },
   { q: "Можно ли в Ubuntu 20.04.3 LTS работать от пользователя root?", opts: ["Можно, по умолчанию","Нужно добавить root при установке","В LTS версиях нельзя","Можно, но не по умолчанию — через su или sudo"], ans: [3], hint: "sudo su или sudo -i" },
   { q: "Какой командой изменяются права доступа на файл?", opts: ["chown","mode","chmod","chfile"], ans: [2], hint: "chmod = change mode" },
   { q: "Что выведет: if [ 4 -gt 5 ]; then echo '0'; else echo '1'; fi?", opts: ["command not found","4 -gt 5","0","1"], ans: [3], hint: "Проверьте условие 4 > 5" },
   { q: "Зачем минимизировать количество RUN в Dockerfile?", opts: ["Чтобы не увеличивать объём образа — каждый RUN создаёт слой","Чтобы сократить время запуска контейнера","Для каждого RUN нужен свой Dockerfile","Есть ограничение на количество RUN"], ans: [0], hint: "Каждый RUN = новый слой" },
   { q: "В чём значение слоёв в образе?", opts: ["Каждый слой описывает, как будет запущено приложение","Новый слой — новые данные, не связанные с предыдущими","Каждый слой описывает изменение, которое должно быть выполнено с данными","В контейнере каждое приложение устанавливается на слой"], ans: [2], hint: "Layered filesystem" },
-  { q: "За что отвечает "%{Referer}i" в Combined Log Format?", opts: ["IP-адрес пользователя","URL, с которого перешёл пользователь","Провайдер пользователя","Браузер пользователя"], ans: [1], hint: "Referrer = откуда пришёл" },
+  { q: "За что отвечает \"%{Referer}i\" в Combined Log Format?", opts: ["IP-адрес пользователя","URL, с которого перешёл пользователь","Провайдер пользователя","Браузер пользователя"], ans: [1], hint: "Referrer = откуда пришёл" },
   { q: "Каким выражением посчитать всех пользователей в системе?", opts: ["cat /etc/passwd | wc -l","cat /etc/passwd wc -l","ls /etc/passwd wc -l"], ans: [0], hint: "Нужен pipe" },
   { q: "Что сделает команда du -sh /root/?", opts: ["Выведет общий размер каталога /root/ в человекочитаемом виде","Выведет список файлов в /root/","Удалит файлы из /root/","Покажет свободное место на диске"], ans: [0], hint: "-s=summary, -h=human readable" },
   { q: "Какая команда НЕ создаёт папки sus1, sus2, sus3?", opts: ["mkdir sus{1-3}","mkdir sus{1..3}","mkdir sus{1, 2, 3}"], ans: [0], hint: "Обратите внимание на синтаксис brace expansion" },
@@ -2737,10 +2721,7 @@ $9","05
   { q: "Что делает docker update?", opts: ["Обновляет конфигурацию контейнера","Список контейнеров для обновления","Запускает остановленный контейнер","Первый запуск контейнера"], ans: [0], hint: "Изменение лимитов RAM, CPU" },
   { q: "Основные части архитектуры Docker:", opts: ["Docker-сервис, образы, контейнеры, Docker Registry, DockerHub","Docker-сервис, образы, контейнеры, Docker Registry","Docker-сервис, образы, контейнеры, Docker Cloud","Docker-сервис, Dockerfile, контейнеры, Docker Registry, DockerHub"], ans: [0], hint: "5 основных компонентов" },
   { q: "Какой параметр нужен для ngx_http_stub_status_module?", opts: ["ngx_http_stub_status_module","http_stub_status_module","--with-http_stub_status_module","--with-ngx_http_stub_status_module"], ans: [2], hint: "Префикс --with-" },
-  { q: "Как передать параметры из gitlab-ci в bash-скрипт?", opts: ["script:
-  -extends CI_PROJECT_NAME","script: (export CI_PROJECT_NAME)","script
-  -export CI_PROJECT_NAME","script:
-  -export .gitlab-ci.yml"], ans: [1], hint: "Через export переменной окружения" },
+  { q: "Как передать параметры из gitlab-ci в bash-скрипт?", opts: ["script:\n  -extends CI_PROJECT_NAME","script: (export CI_PROJECT_NAME)","script\n  -export CI_PROJECT_NAME","script:\n  -export .gitlab-ci.yml"], ans: [1], hint: "Через export переменной окружения" },
   { q: "Для чего нужен FROM в Dockerfile?", opts: ["Задаёт базовый (родительский) образ","Создаёт точку монтирования","Указывает рабочую директорию","Выполняет команду и создаёт слой"], ans: [0], hint: "FROM base_image" },
   { q: "Для чего нужен dockle?", opts: ["Инструмент для проверки безопасности образов контейнеров","Графический интерфейс Docker","Инструмент Docker Compose","Система мониторинга контейнеров"], ans: [0], hint: "Security linting tool" },
   { q: "Какая команда загружает образ в репозиторий?", opts: ["docker pull","docker push","docker commit","docker save"], ans: [1], hint: "push = отправить, pull = получить" },
@@ -2795,12 +2776,9 @@ $9","05
   { q: "Формат файлов Docker Compose?", opts: ["YAML","JSON","XML","INI"], ans: [0], hint: "docker-compose.yml" },
   { q: "Команда для запуска контейнера с именем:", opts: ["docker run --name","docker launch --name","docker start --name","docker create --name"], ans: [0], hint: "docker run --name mycontainer image" },
   { q: "Ключевое слово Docker Compose для образа сервиса:", opts: ["image","container","build","service"], ans: [0], hint: "image: nginx:latest" },
-  { q: "Ключевое слово Docker Compose для переменных окружения:", opts: ["variables","env","env_vars","environment"], ans: [3], hint: "environment:
-  - KEY=value" },
-  { q: "Параметр docker-compose.yml для монтирования томов:", opts: ["binds","volumes","storage","mounts"], ans: [1], hint: "volumes:
-  - ./data:/data" },
-  { q: "Параметр docker-compose.yml для публикации портов:", opts: ["publish","expose","ports","forward"], ans: [2], hint: "ports:
-  - "8080:80"" },
+  { q: "Ключевое слово Docker Compose для переменных окружения:", opts: ["variables","env","env_vars","environment"], ans: [3], hint: "environment:\n  - KEY=value" },
+  { q: "Параметр docker-compose.yml для монтирования томов:", opts: ["binds","volumes","storage","mounts"], ans: [1], hint: "volumes:\n  - ./data:/data" },
+  { q: "Параметр docker-compose.yml для публикации портов:", opts: ["publish","expose","ports","forward"], ans: [2], hint: "ports:\n  - \"8080:80\"" },
   { q: "Команда просмотра логов всех сервисов Docker Compose:", opts: ["docker-compose view","docker-compose logs","docker-compose show","docker-compose display"], ans: [1], hint: "docker-compose logs -f" },
   { q: "В чём разница CMD и ENTRYPOINT в Dockerfile?", opts: ["CMD задаёт команду по умолчанию (можно переопределить); ENTRYPOINT — неизменяемая команда","ENTRYPOINT задаёт команду по умолчанию, CMD — неизменяемая","Оба одинаковы","CMD выполняется только при сборке"], ans: [0], hint: "CMD = аргументы по умолчанию, ENTRYPOINT = основная команда" },
   { q: "В чём разница COPY и ADD в Dockerfile?", opts: ["COPY копирует локальные файлы; ADD умеет распаковывать архивы и скачивать по URL","ADD копирует локальные файлы, COPY распаковывает архивы","Оба одинаковы","COPY умеет скачивать по URL"], ans: [0], hint: "COPY = простое копирование, ADD = расширенное" },
